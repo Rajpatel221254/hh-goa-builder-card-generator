@@ -1,0 +1,764 @@
+/* ─── Full viewport, NO scroll ─── */
+.main {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #0e3d1f;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* Center column — always flex column, fills space */
+.centerCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+
+/* ══════════════════════════
+   TOP SECTION — logo area
+   ══════════════════════════ */
+.topSection {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Lush green with slight gradient */
+  background: linear-gradient(160deg, #1e7038 0%, #155a28 55%, #0f4420 100%);
+  padding: clamp(0.7rem, 2vh, 1.2rem) 1rem 0;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Subtle texture — radial glow from top center */
+.topSection::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 200%;
+  background: radial-gradient(ellipse at 50% 10%, rgba(245, 200, 0, 0.08) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* ─── Event strip ─── */
+.eventStrip {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: clamp(0.52rem, 1.5vw, 0.7rem);
+  letter-spacing: 0.22em;
+  color: rgba(245, 200, 0, 0.65);
+  text-transform: uppercase;
+  margin-bottom: clamp(0.4rem, 1.2vh, 0.8rem);
+}
+
+.stripDot {
+  opacity: 0.45;
+}
+
+/* ─── Logo block ─── */
+.logoBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: clamp(0.2rem, 0.8vh, 0.5rem);
+  animation: logoIn 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Wordmark container — relative for badge overlay */
+.wordmarkWrap {
+  position: relative;
+  width: 100%;
+  max-width: min(1000px, 96vw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wordmark {
+  width: 100%;
+  height: auto;
+  /* PNG has white/transparent bg → mix-blend-mode to let the green show */
+  mix-blend-mode: multiply;
+  /* Alternatively use filter to boost contrast if the above doesn't look good */
+  display: block;
+  object-fit: contain;
+  max-height: clamp(80px, 18vw, 160px);
+}
+
+/* गोवा logo badge — centered over the gap between HACKER & HOUSE */
+.goaBadgeWrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  animation: badgeWobble 4s ease-in-out 1.5s infinite;
+}
+
+.goaLogo {
+  width: clamp(52px, 8vw, 110px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* Tagline below wordmark */
+.tagline {
+  font-family: var(--font-mono);
+  font-size: clamp(0.5rem, 1.5vw, 0.68rem);
+  letter-spacing: 0.25em;
+  color: rgba(245, 200, 0, 0.55);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Yellow rule below logo section */
+.topDivider {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #f5c800 25%, #f5c800 75%, transparent 100%);
+  margin-top: clamp(0.6rem, 1.5vh, 1rem);
+  opacity: 0.5;
+}
+
+/* ══════════════════════════
+   DIAGONAL SEPARATOR
+   ══════════════════════════ */
+.diagonalSep {
+  position: relative;
+  width: 100%;
+  height: clamp(20px, 4vh, 40px);
+  background: #0e3d1f;
+  z-index: 2;
+  flex-shrink: 0;
+  margin-top: -1px;
+}
+
+.diagonalSep::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  /* Diagonal slash from top-left to bottom-right */
+  background: linear-gradient(160deg, #155a28 50%, #0e3d1f 50%);
+}
+
+/* ══════════════════════════
+   BOTTOM SECTION — actions
+   ══════════════════════════ */
+.bottomSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.5rem, 2vh, 1.5rem) 1.25rem clamp(0.5rem, 2vh, 1.5rem);
+  gap: clamp(0.6rem, 1.8vh, 1.2rem);
+  overflow: hidden;
+}
+
+/* ─── Action title ─── */
+.actionTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  text-align: center;
+  animation: fadeUp 0.5s ease 0.2s both;
+}
+
+.actionTitleLine {
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 2vw, 0.82rem);
+  font-weight: 700;
+  letter-spacing: 0.45em;
+  color: rgba(253, 245, 224, 0.5);
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.actionTitleMain {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 7vw, 4rem);
+  color: var(--cream);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-shadow: 2px 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* ─── Action description ─── */
+.actionDesc {
+  font-family: var(--font-body);
+  font-size: clamp(0.76rem, 2.2vw, 0.9rem);
+  color: rgba(253, 245, 224, 0.55);
+  text-align: center;
+  max-width: 400px;
+  line-height: 1.55;
+  animation: fadeUp 0.5s ease 0.35s both;
+}
+
+/* ─── Two option cards ─── */
+.cardRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  max-width: 580px;
+  animation: fadeUp 0.5s ease 0.5s both;
+}
+
+/* ─── Each card ─── */
+.optionCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: clamp(1rem, 3vh, 1.8rem) 1rem;
+  border: none;
+  cursor: pointer;
+  transition:
+    transform 100ms ease,
+    filter 120ms ease;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.optionCard:active {
+  transform: scale(0.97);
+}
+
+/* Gallery card — yellow */
+.cardGallery {
+  background: var(--yellow);
+  color: var(--green-deep);
+  border-radius: 10px 0 0 10px;
+  box-shadow: -4px 0 0 0 #0a2c12 inset, 0 -4px 0 0 #0a2c12 inset;
+}
+
+.cardGallery:hover {
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+}
+
+/* Camera card — pink outline on dark */
+.cardCamera {
+  background: rgba(255, 45, 120, 0.08);
+  color: var(--pink);
+  border-radius: 0 10px 10px 0;
+  border: 2px solid rgba(255, 45, 120, 0.5);
+  border-left: none;
+}
+
+.cardCamera:hover {
+  background: rgba(255, 45, 120, 0.15);
+  transform: translateY(-2px);
+}
+
+.cardIcon {
+  margin-bottom: 0.2rem;
+}
+
+.cardLabel {
+  font-family: var(--font-mono);
+  font-size: clamp(0.58rem, 1.6vw, 0.7rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  opacity: 0.75;
+  line-height: 1;
+}
+
+.cardLabelBig {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5.5vw, 2.8rem);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.cardHint {
+  font-family: var(--font-mono);
+  font-size: clamp(0.5rem, 1.3vw, 0.62rem);
+  letter-spacing: 0.15em;
+  opacity: 0.55;
+  margin-top: 0.15rem;
+}
+
+.cardArrow {
+  position: absolute;
+  bottom: 0.6rem;
+  right: 0.9rem;
+  font-size: 1.1rem;
+  opacity: 0.4;
+  font-family: monospace;
+  transition: opacity 150ms, transform 150ms;
+}
+
+.optionCard:hover .cardArrow {
+  opacity: 0.85;
+  transform: translateX(3px);
+}
+
+/* ─── OR divider between cards ─── */
+.orDivider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0 0.6rem;
+  flex-shrink: 0;
+}
+
+.orLine {
+  flex: 1;
+  width: 1px;
+  background: rgba(253, 245, 224, 0.15);
+  min-height: 20px;
+}
+
+.orText {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(253, 245, 224, 0.3);
+  font-weight: 700;
+}
+
+/* ─── Footer ─── */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: fadeUp 0.45s ease 0.65s both;
+}
+
+.hashTag {
+  font-family: var(--font-mono);
+  font-size: clamp(0.65rem, 1.8vw, 0.78rem);
+  font-weight: 700;
+  color: var(--pink);
+  letter-spacing: 0.07em;
+}
+
+.footerDot {
+  color: rgba(253, 245, 224, 0.2);
+}
+
+.footerCredit {
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 1.4vw, 0.66rem);
+  color: rgba(245, 200, 0, 0.35);
+  letter-spacing: 0.14em;
+}
+
+/* ══════════════════════════
+   ANIMATIONS
+   ══════════════════════════ */
+@keyframes logoIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(16px);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes badgeWobble {
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(-2deg);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(2deg) scale(1.04);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ══════════════════════════
+   RESPONSIVE
+   ══════════════════════════ */
+
+/* Very short screens (landscape phone) */
+@media (max-height: 600px) {
+  .topSection {
+    padding-top: 0.4rem;
+  }
+
+  .eventStrip {
+    display: none;
+  }
+
+  .wordmark {
+    max-height: 60px;
+  }
+
+  .goaLogo {
+    width: 48px;
+  }
+
+  .tagline {
+    display: none;
+  }
+
+  .topDivider {
+    margin-top: 0.4rem;
+  }
+
+  .diagonalSep {
+    height: 16px;
+  }
+
+  .actionTitleMain {
+    font-size: clamp(1.5rem, 6vw, 2.8rem);
+  }
+
+  .actionDesc {
+    display: none;
+  }
+
+  .optionCard {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .cardLabelBig {
+    font-size: clamp(1.4rem, 5vw, 2.2rem);
+  }
+}
+
+/* Narrow phones */
+@media (max-width: 380px) {
+  .cardRow {
+    flex-direction: column;
+    max-width: 320px;
+    gap: 0.5rem;
+  }
+
+  .cardGallery {
+    border-radius: 10px;
+    box-shadow: none;
+  }
+
+  .cardCamera {
+    border-radius: 10px;
+    border: 2px solid rgba(255, 45, 120, 0.5);
+  }
+
+  .orDivider {
+    flex-direction: row;
+    padding: 0.4rem 0;
+  }
+
+  .orLine {
+    min-height: unset;
+    min-width: 40px;
+    height: 1px;
+    width: unset;
+  }
+}
+
+/* ══════════════════════════
+   DESKTOP DECORATIONS
+   Hidden on mobile (< 1024px)
+   ══════════════════════════ */
+.desktopLeft,
+.desktopRight {
+  display: none;
+  /* hidden on mobile */
+}
+
+@media (min-width: 1024px) {
+
+  /* Main layout becomes 3-col on desktop */
+  .main {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  /* Left panel */
+  .desktopLeft {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: 180px;
+    flex-shrink: 0;
+    padding: 2rem 1rem;
+    background: linear-gradient(180deg, #0d4420 0%, #0e3d1f 100%);
+    border-right: 1px solid rgba(245, 200, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  /* Right panel */
+  .desktopRight {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: 200px;
+    flex-shrink: 0;
+    padding: 2rem 1rem;
+    background: linear-gradient(180deg, #0d4420 0%, #0e3d1f 100%);
+    border-left: 1px solid rgba(245, 200, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  /* Center content fills remaining space — already defined globally */
+
+  .topSection {
+    flex: none;
+  }
+
+
+  /* Rotated text labels */
+  .desktopRotatedText {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: rgba(245, 200, 0, 0.4);
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    white-space: nowrap;
+  }
+
+  .desktopRotatedTextRight {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: rgba(245, 200, 0, 0.4);
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+  }
+
+  /* Palm SVG accent */
+  .desktopPalmAccent {
+    width: 80px;
+    opacity: 0.7;
+    animation: sway 8s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+
+  .desktopPalmAccent svg {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Stamp circle */
+  .desktopStamp {}
+
+  .stampCircle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px dashed rgba(245, 200, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    font-family: var(--font-mono);
+    font-size: 0.48rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: rgba(245, 200, 0, 0.4);
+    text-transform: uppercase;
+    text-align: center;
+    animation: spin-slow 20s linear infinite;
+  }
+
+  /* Builder card preview */
+  .desktopCardPreview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .previewLanyard {
+    width: 3px;
+    height: 28px;
+    background: linear-gradient(to bottom, var(--pink), rgba(255, 45, 120, 0.3));
+    border-radius: 2px;
+  }
+
+  .previewCard {
+    width: 130px;
+    background: linear-gradient(145deg, #1a6030 0%, #0e3d1f 100%);
+    border: 1.5px solid rgba(245, 200, 0, 0.25);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .previewPhotoSlot {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px dashed rgba(245, 200, 0, 0.25);
+    border-radius: 4px;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.42rem;
+    letter-spacing: 0.12em;
+    color: rgba(245, 200, 0, 0.3);
+  }
+
+  .previewInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .previewNameLine {
+    height: 5px;
+    border-radius: 2px;
+    background: rgba(245, 200, 0, 0.3);
+    width: 80%;
+  }
+
+  .previewDetailLine {
+    height: 3px;
+    border-radius: 1px;
+    background: rgba(245, 200, 0, 0.15);
+    width: 100%;
+  }
+
+  .previewBarcode {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 20px;
+    padding: 0 2px;
+  }
+
+  .previewBar {
+    flex-shrink: 0;
+    height: 100%;
+    background: rgba(245, 200, 0, 0.3);
+    border-radius: 1px;
+  }
+
+  .previewTag {
+    font-family: var(--font-mono);
+    font-size: 0.42rem;
+    letter-spacing: 0.1em;
+    color: var(--pink);
+    text-align: center;
+    opacity: 0.7;
+  }
+}
+
+/* Keyframes for desktop decorations */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes sway {
+
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

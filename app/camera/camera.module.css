@@ -1,0 +1,449 @@
+.main {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--green-deep);
+  overflow: hidden;
+  padding: 0;
+}
+
+/* ─── Hidden Canvas ─── */
+.hiddenCanvas {
+  display: none;
+  position: absolute;
+}
+
+/* ─── Flash Overlay ─── */
+.flashOverlay {
+  position: fixed;
+  inset: 0;
+  background: white;
+  opacity: 0.85;
+  z-index: 100;
+  pointer-events: none;
+  animation: flash-out 0.3s ease forwards;
+}
+
+@keyframes flash-out {
+  0% {
+    opacity: 0.85;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ─── Header ─── */
+.header {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+}
+
+.backBtn {
+  font-size: 0.78rem;
+  padding: 0.5rem 0.9rem;
+  gap: 0.4rem;
+}
+
+.flipBtn {
+  font-size: 0.78rem;
+  padding: 0.5rem 0.9rem;
+  gap: 0.4rem;
+}
+
+.flipBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ─── Logo (Wordmark with Goa in center) ─── */
+.miniLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.miniLogoWordmarkWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 140px;
+}
+
+.miniLogoWordmark {
+  height: clamp(16px, 3.5vw, 20px);
+  width: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: brightness(0) invert(1) sepia(1) saturate(4) hue-rotate(10deg);
+  opacity: 0.95;
+  display: block;
+}
+
+.miniGoaBadgeWrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.miniGoaLogo {
+  height: clamp(18px, 4vw, 24px);
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+}
+
+
+/* ─── Viewfinder ─── */
+
+.viewfinderWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  flex: 1;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 600px) {
+  .viewfinderWrapper {
+    max-width: 560px;
+    border-radius: 16px;
+    margin: 0 1rem;
+    border: 2px solid rgba(245, 200, 0, 0.25);
+  }
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.videoMirrored {
+  transform: scaleX(-1);
+}
+
+.capturedImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ─── Frame Corners ─── */
+.frameCorners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: var(--yellow);
+  border-style: solid;
+}
+
+.cornerTL {
+  top: 16px;
+  left: 16px;
+  border-width: 3px 0 0 3px;
+  border-radius: 4px 0 0 0;
+}
+
+.cornerTR {
+  top: 16px;
+  right: 16px;
+  border-width: 3px 3px 0 0;
+  border-radius: 0 4px 0 0;
+}
+
+.cornerBL {
+  bottom: 16px;
+  left: 16px;
+  border-width: 0 0 3px 3px;
+  border-radius: 0 0 0 4px;
+}
+
+.cornerBR {
+  bottom: 16px;
+  right: 16px;
+  border-width: 0 3px 3px 0;
+  border-radius: 0 0 4px 0;
+}
+
+/* ─── Crosshair ─── */
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.crosshairH {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--yellow);
+  transform: translateY(-50%);
+}
+
+.crosshairV {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--yellow);
+  transform: translateX(-50%);
+}
+
+/* ─── LIVE badge ─── */
+.viewfinderLabel {
+  position: absolute;
+  top: 20px;
+  right: 52px;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--cream);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(4px);
+}
+
+.viewfinderDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff2d78;
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.2;
+  }
+}
+
+/* ─── Permission Denied / Loading ─── */
+.permissionDenied,
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  min-height: 300px;
+}
+
+.deniedTitle {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--pink);
+  letter-spacing: 0.04em;
+}
+
+.deniedText {
+  font-size: 0.9rem;
+  color: rgba(253, 245, 224, 0.7);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.tryAgainBtn {
+  margin-top: 0.5rem;
+}
+
+.loadingRing {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(245, 200, 0, 0.2);
+  border-top-color: var(--yellow);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  color: rgba(245, 200, 0, 0.7);
+}
+
+/* ─── Controls ─── */
+.controls {
+  width: 100%;
+  max-width: 700px;
+  padding: 1.25rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(to top, var(--green-deep) 60%, transparent);
+}
+
+.captureHint {
+  font-size: 0.8rem;
+  color: rgba(253, 245, 224, 0.55);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+/* Big shutter button */
+.captureBtn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: transparent;
+  border: 3px solid var(--yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 100ms, box-shadow 150ms;
+  box-shadow: 0 0 0 0 rgba(245, 200, 0, 0.4);
+  animation: capture-pulse 2.5s ease-in-out infinite;
+}
+
+.captureBtn:hover:not(:disabled) {
+  transform: scale(1.06);
+  box-shadow: 0 0 24px rgba(245, 200, 0, 0.3);
+}
+
+.captureBtn:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.captureBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes capture-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 200, 0, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 10px rgba(245, 200, 0, 0);
+  }
+}
+
+.captureBtnInner {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--yellow);
+  transition: background 100ms;
+}
+
+.captureBtn:active:not(:disabled) .captureBtnInner {
+  background: #ffd000;
+}
+
+.captureTag {
+  margin-top: 0.1rem;
+}
+
+.hashTagSmall {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--pink);
+  letter-spacing: 0.1em;
+}
+
+/* ─── Review Controls ─── */
+.reviewControls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  animation: fade-up 0.4s ease both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reviewText {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--yellow);
+  letter-spacing: 0.04em;
+}
+
+.reviewBtns {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.retakeBtn,
+.usePhotoBtn {
+  flex: 1;
+  padding: 0.9rem 1rem;
+  font-size: 0.82rem;
+}
