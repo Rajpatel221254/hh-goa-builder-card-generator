@@ -300,12 +300,21 @@ export default function EditorPage() {
 
     ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, OUT_W, OUT_H);
 
-    const cropped = canvas.toDataURL('image/jpeg', 0.93);
-    sessionStorage.setItem('hh_cropped_photo', cropped);
-    sessionStorage.setItem(
-      'hh_photo_transform',
-      JSON.stringify({ x: posRef.current.x, y: posRef.current.y, scale: scaleRef.current })
-    );
+    const cropped = canvas.toDataURL('image/jpeg', 0.88);
+    try {
+      sessionStorage.setItem('hh_cropped_photo', cropped);
+      sessionStorage.setItem(
+        'hh_photo_transform',
+        JSON.stringify({ x: posRef.current.x, y: posRef.current.y, scale: scaleRef.current })
+      );
+    } catch {
+      sessionStorage.clear();
+      try {
+        sessionStorage.setItem('hh_cropped_photo', cropped);
+      } catch (err) {
+        console.error('Cropped photo storage error:', err);
+      }
+    }
 
     router.push('/builder');
   }, [cropSize, imgNatW, router]);

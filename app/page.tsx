@@ -5,6 +5,53 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './page.module.css';
 
+async function compressFileToDataUrl(file: File, maxDim = 1200, quality = 0.85): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const src = e.target?.result as string;
+      const img = document.createElement('img');
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(src);
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(src);
+      img.src = src;
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+}
+
+function safeSetSessionItem(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch (e) {
+    console.warn('SessionStorage quota exceeded. Clearing previous items and retrying...', e);
+    sessionStorage.clear();
+    try {
+      sessionStorage.setItem(key, value);
+    } catch (err) {
+      console.error('Failed to set sessionStorage item after clear:', err);
+    }
+  }
+}
+
 export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -14,16 +61,86 @@ export default function HomePage() {
   }, []);
 
   const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      const url = URL.createObjectURL(file);
-      sessionStorage.setItem('hh_photo_src', url);
-      sessionStorage.setItem('hh_photo_type', 'gallery');
-      router.push('/editor');
+
+      let processFile = file;
+
+      // Handle iPhone HEIC / HEIF format conversion
+      if (
+        file.name.toLowerCase().endsWith('.heic') ||
+        file.name.toLowerCase().endsWith('.heif') ||
+        file.type === 'image/heic' ||
+        file.type === 'image/heif'
+      ) {
+        try {
+          const heic2any = (await import('heic2any')).default;
+          const converted = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.92,
+          });
+          const blobToUse = Array.isArray(converted) ? converted[0] : converted;
+          processFile = new File([blobToUse], file.name.replace(/\.heic$/i, '.jpg'), {
+            type: 'image/jpeg',
+          });
+        } catch (err) {
+          console.error('HEIC conversion failed:', err);
+        }
+      }
+
+      try {
+        const compressedDataUrl = await compressFileToDataUrl(processFile, 1200, 0.85);
+        if (compressedDataUrl) {
+          safeSetSessionItem('hh_photo_src', compressedDataUrl);
+          safeSetSessionItem('hh_photo_type', 'gallery');
+          router.push('/editor');
+        }
+      } catch (err) {
+        console.error('File compression error:', err);
+      }
     },
     [router]
   );
+
+  const handleUseSamplePhoto = useCallback(() => {
+    // High quality sample hacker avatar for quick testing
+    const sampleCanvas = document.createElement('canvas');
+    sampleCanvas.width = 600;
+    sampleCanvas.height = 800;
+    const ctx = sampleCanvas.getContext('2d');
+    if (ctx) {
+      const grad = ctx.createLinearGradient(0, 0, 600, 800);
+      grad.addColorStop(0, '#0b4520');
+      grad.addColorStop(0.5, '#155a28');
+      grad.addColorStop(1, '#082512');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 600, 800);
+
+      // Draw avatar silhouette
+      ctx.fillStyle = '#f5c800';
+      ctx.beginPath();
+      ctx.arc(300, 320, 140, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ff2d78';
+      ctx.beginPath();
+      ctx.arc(300, 680, 240, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sunglasses overlay
+      ctx.fillStyle = '#082512';
+      ctx.fillRect(210, 300, 75, 45);
+      ctx.fillRect(315, 300, 75, 45);
+      ctx.fillRect(285, 315, 30, 10);
+
+      const sampleUrl = sampleCanvas.toDataURL('image/jpeg', 0.9);
+      safeSetSessionItem('hh_photo_src', sampleUrl);
+      safeSetSessionItem('hh_photo_type', 'sample');
+      router.push('/editor');
+    }
+  }, [router]);
 
   const handleCapture = useCallback(() => {
     router.push('/camera');
@@ -207,6 +324,31 @@ export default function HomePage() {
               <div className={styles.cardArrow}>→</div>
             </button>
 
+          </div>
+
+          {/* Quick Demo Button */}
+          <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+            <button
+              id="btn-sample"
+              type="button"
+              onClick={handleUseSamplePhoto}
+              style={{
+                background: 'rgba(245, 200, 0, 0.12)',
+                border: '1px solid rgba(245, 200, 0, 0.4)',
+                color: '#f5c800',
+                padding: '8px 18px',
+                borderRadius: '20px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              ⚡ Try Demo Hacker Photo (Instant Test)
+            </button>
           </div>
 
           {/* Footer */}

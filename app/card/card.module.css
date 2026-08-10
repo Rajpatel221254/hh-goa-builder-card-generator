@@ -1337,3 +1337,117 @@
     align-items: center;
   }
 }
+
+/* ── Format Selector Toggle Bar ── */
+.formatToggleBar {
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1.5px solid rgba(245, 200, 0, 0.3);
+  border-radius: 30px;
+  padding: 4px;
+  margin-bottom: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.formatToggleBtn {
+  flex: 1;
+  padding: 8px 14px;
+  border-radius: 24px;
+  border: none;
+  background: transparent;
+  color: rgba(253, 245, 224, 0.7);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.formatToggleActive {
+  background: var(--yellow);
+  color: #0e3d1f;
+  box-shadow: 0 4px 12px rgba(245, 200, 0, 0.3);
+}
+
+/* ── Format A: PFP Overlay Card ── */
+.pfpFrameOuter {
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
+  position: relative;
+  border-radius: 50%;
+  padding: 12px;
+  background: linear-gradient(135deg, #f5c800 0%, #ff2d78 50%, #229946 100%);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 30px rgba(245, 200, 0, 0.4);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pfpFrameInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  border: 4px solid #0e3d1f;
+  background: #082412;
+}
+
+.pfpUserPhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pfpOverlayGraphic {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.pfpTopBadge {
+  align-self: center;
+  background: rgba(14, 61, 31, 0.9);
+  border: 1.5px solid var(--yellow);
+  color: var(--yellow);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.pfpBottomBadge {
+  align-self: center;
+  background: linear-gradient(90deg, #ff2d78 0%, #0e3d1f 100%);
+  border: 1.5px solid #ffffff;
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
