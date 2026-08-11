@@ -127,8 +127,18 @@ export default function CameraPage() {
   /* Use captured photo — navigate to editor */
   const handleUsePhoto = useCallback(() => {
     if (!captured) return;
-    sessionStorage.setItem('hh_photo_src', captured);
-    sessionStorage.setItem('hh_photo_type', 'camera');
+    try {
+      sessionStorage.setItem('hh_photo_src', captured);
+      sessionStorage.setItem('hh_photo_type', 'camera');
+    } catch {
+      sessionStorage.clear();
+      try {
+        sessionStorage.setItem('hh_photo_src', captured);
+        sessionStorage.setItem('hh_photo_type', 'camera');
+      } catch (e) {
+        console.error('Camera storage error:', e);
+      }
+    }
     router.push('/editor');
   }, [captured, router]);
 

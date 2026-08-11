@@ -68,16 +68,20 @@ export default function CardExportPage() {
     vibe: 'BUILDING IDEAS. BREAKING LIMITS.',
   });
 
+  const [activeFormat, setActiveFormat] = useState<'card' | 'pfp'>('card');
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [toastMessage, setToastMessage] = useState('Card Downloaded Successfully!');
 
   // Load from session storage
   useEffect(() => {
     const cropped = sessionStorage.getItem('hh_cropped_photo');
     const raw = sessionStorage.getItem('hh_photo_src');
     if (cropped) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhotoSrc(cropped);
     } else if (raw) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhotoSrc(raw);
     }
 
@@ -85,6 +89,7 @@ export default function CardExportPage() {
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData((prev) => ({
           ...prev,
           ...parsed,
@@ -112,7 +117,7 @@ export default function CardExportPage() {
       // Trigger file download
       const safeName = formData.name ? formData.name.trim().replace(/\s+/g, '_') : 'Builder';
       const link = document.createElement('a');
-      link.download = `HH_Goa_2026_Card_${safeName}.png`;
+      link.download = `HH_Goa_2026_${activeFormat === 'pfp' ? 'PFP_Frame' : 'Builder_Card'}_${safeName}.png`;
       link.href = dataUrl;
       link.click();
 
@@ -124,21 +129,39 @@ export default function CardExportPage() {
         colors: ['#f5c800', '#ff2d78', '#229946', '#ffffff'],
       });
 
+      setToastMessage(`${activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card'} Downloaded Successfully!`);
       setDownloadSuccess(true);
       setTimeout(() => setDownloadSuccess(false), 5000);
     } catch (err) {
-      console.error('Error generating card image:', err);
+      console.error('Error generating image:', err);
       alert('Could not export image. Please try again.');
     } finally {
       setIsDownloading(false);
     }
   };
 
-  // Share to X intent
-  const handleShareToX = () => {
-    const builderName = formData.name ? formData.name.trim() : 'Builder';
+  // Share to X intent with Clipboard Image Copying & Direct X Web Intent
+  const handleShareToX = async () => {
     const builderTitle = formData.builderTitle || 'The Code Architect';
-    const text = `Just generated my official Builder Card as "${builderTitle}" for @HackerHouseGoa 2026! 🌴🚀\n\nSee you in Goa! 🏖️\n\n#FrameInGoa #HHGoa2026 #HackerHouseGoa`;
+    const formatName = activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card';
+    const text = `Just generated my official HH Goa 2026 ${formatName} as "${builderTitle}"! 🌴🚀\n\nSee you in Goa! 🏖️\n\n#FrameInGoa #HHGoa2026 @HackerHouseGoa`;
+
+    // 1. Try copying image to clipboard for direct copy-paste into X
+    if (cardRef.current && typeof navigator !== 'undefined' && navigator.clipboard && typeof window !== 'undefined' && 'ClipboardItem' in window) {
+      try {
+        const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        setToastMessage('Image copied to clipboard! Paste (Ctrl+V) directly into your X post.');
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 5000);
+      } catch (err) {
+        console.log('Clipboard image copy fallback:', err);
+      }
+    }
+
+    // 2. Open X tweet intent with pre-filled caption & hashtag
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -186,14 +209,14 @@ export default function CardExportPage() {
               />
             </div>
           </div>
-          <span className={styles.navSubBadge}>FINAL CARD</span>
+          <span className={styles.navSubBadge}>FINAL GRAPHIC</span>
         </div>
 
         <button
           onClick={handleCreateAnother}
           className={styles.newCardBtn}
         >
-          + NEW CARD
+          + NEW GRAPHIC
         </button>
       </header>
 
@@ -202,7 +225,7 @@ export default function CardExportPage() {
         <div className={styles.toastSuccess} role="status">
           <span className={styles.toastIcon}>🎉</span>
           <div className={styles.toastText}>
-            <strong>Card Downloaded Successfully!</strong>
+            <strong>{toastMessage}</strong>
             <span>Ready to post on X with #FrameInGoa</span>
           </div>
         </div>
@@ -210,34 +233,82 @@ export default function CardExportPage() {
 
       {/* Main Studio Viewport */}
       <main className={styles.finalLayout}>
-        {/* Left Column: The Completed Collectible Card to Export */}
+        {/* Left Column: The Completed Graphic to Export */}
         <section className={styles.cardSection}>
-          <div className={styles.cardScaler} ref={cardRef}>
-            {/* Lanyard Graphic */}
-            <div className={styles.lanyardContainer}>
-              <div className={styles.lanyardStrap}>
-                <div className={styles.lanyardPattern}>
-                  <span>★ HH GOA 2026 🌴</span>
-                </div>
-              </div>
-              <div className={styles.lanyardMetalClip}>
-                <div className={styles.clipRing} />
-                <div className={styles.clipBody}>
-                  <div className={styles.clipSlot} />
-                </div>
-              </div>
-            </div>
 
-            {/* The Badge Card Frame */}
-            <div className={styles.cardFrame}>
-              <div className={styles.cardInner}>
-                {/* ── CARD HEADER ROW ── */}
-                <div className={styles.cardHeaderRow}>
-                  {/* Left: Official Hacker House Wordmark + Goa in center */}
-                  <div className={styles.logoBlock}>
-                    <div className={styles.cardWordmarkContainer}>
-                      <Image
-                        src="/Hacker_house_transparent.png"
+          {/* ── Format Selector Toggle Bar ── */}
+          <div className={styles.formatToggleBar}>
+            <button
+              type="button"
+              className={`${styles.formatToggleBtn} ${activeFormat === 'card' ? styles.formatToggleActive : ''}`}
+              onClick={() => setActiveFormat('card')}
+            >
+              💳 Format B: Builder Card
+            </button>
+            <button
+              type="button"
+              className={`${styles.formatToggleBtn} ${activeFormat === 'pfp' ? styles.formatToggleActive : ''}`}
+              onClick={() => setActiveFormat('pfp')}
+            >
+              🖼️ Format A: PFP Frame
+            </button>
+          </div>
+
+          <div className={styles.cardScaler} ref={cardRef}>
+            {activeFormat === 'pfp' ? (
+              /* ── FORMAT A: PFP FRAME OVERLAY ── */
+              <div className={styles.pfpFrameOuter}>
+                <div className={styles.pfpFrameInner}>
+                  {photoSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photoSrc} alt={formData.name || 'PFP Avatar'} className={styles.pfpUserPhoto} />
+                  ) : (
+                    <div className={styles.photoPlaceholder}>
+                      <span className={styles.placeholderIcon}>👤</span>
+                      <span className={styles.placeholderText}>NO PHOTO</span>
+                    </div>
+                  )}
+
+                  {/* Tropical Border Graphic Overlay */}
+                  <div className={styles.pfpOverlayGraphic}>
+                    <div className={styles.pfpTopBadge}>
+                      ★ HH GOA 2026 ★
+                    </div>
+                    <div className={styles.pfpBottomBadge}>
+                      <span>#FRAMEINGOA</span>
+                      <span>🌴</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ── FORMAT B: BUILDER BADGE CARD ── */
+              <>
+                {/* Lanyard Graphic */}
+                <div className={styles.lanyardContainer}>
+                  <div className={styles.lanyardStrap}>
+                    <div className={styles.lanyardPattern}>
+                      <span>★ HH GOA 2026 🌴</span>
+                    </div>
+                  </div>
+                  <div className={styles.lanyardMetalClip}>
+                    <div className={styles.clipRing} />
+                    <div className={styles.clipBody}>
+                      <div className={styles.clipSlot} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* The Badge Card Frame */}
+                <div className={styles.cardFrame}>
+                  <div className={styles.cardInner}>
+                    {/* ── CARD HEADER ROW ── */}
+                    <div className={styles.cardHeaderRow}>
+                      {/* Left: Official Hacker House Wordmark + Goa in center */}
+                      <div className={styles.logoBlock}>
+                        <div className={styles.cardWordmarkContainer}>
+                          <Image
+                            src="/Hacker_house_transparent.png"
                         alt="Hacker House"
                         width={200}
                         height={36}
@@ -539,8 +610,10 @@ export default function CardExportPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </>
+        )}
+      </div>
+    </section>
 
         {/* Right Column: Download & Sharing Action Card */}
         <section className={styles.actionSection}>
