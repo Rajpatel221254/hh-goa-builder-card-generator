@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   description:
     'Create your official Hacker House Goa 2026 builder identity card. Build your legacy. Frame it in Goa.',
   keywords: ['hacker house goa', 'HH Goa 2026', 'builder card', 'hackathon', 'goa india'],
+  icons: {
+    icon: 'https://hhgoa.com/assets/036-vector-54-3934.svg',
+    shortcut: 'https://hhgoa.com/assets/036-vector-54-3934.svg',
+    apple: 'https://hhgoa.com/assets/036-vector-54-3934.svg',
+  },
   openGraph: {
     title: 'HH Goa 2026 — Builder Card Generator',
     description: 'Create your official builder identity card for Hacker House Goa 2026.',
@@ -35,6 +40,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="icon" href="https://hhgoa.com/assets/036-vector-54-3934.svg" type="image/svg+xml" />
       </head>
       <body>{children}</body>
     </html>
