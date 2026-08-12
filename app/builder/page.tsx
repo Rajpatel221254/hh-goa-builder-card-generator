@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './builder.module.css';
@@ -50,11 +50,89 @@ function formatWebsite(val: string): string {
   return val.trim().replace(/^https?:\/\//i, '');
 }
 
+async function compressFileToDataUrl(file: File, maxDim = 1200, quality = 0.85): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const src = e.target?.result as string;
+      const img = document.createElement('img');
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(src);
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(src);
+      img.src = src;
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+}
+
+async function autoCropToDataUrl(src: string, aspect = 3 / 4): Promise<string> {
+  return new Promise((resolve) => {
+    const img = document.createElement('img');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(src);
+        return;
+      }
+      const targetW = 600;
+      const targetH = Math.round(targetW / aspect);
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const imgW = img.naturalWidth;
+      const imgH = img.naturalHeight;
+      let sx = 0, sy = 0, sw = imgW, sh = imgH;
+      if (imgW / aspect > imgH) {
+        sw = imgH * aspect;
+        sx = (imgW - sw) / 2;
+      } else {
+        sh = imgW / aspect;
+        sy = (imgH - sh) / 2;
+      }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
+
 export default function BuilderPage() {
   const router = useRouter();
 
   // Photo state
   const [photoSrc, setPhotoSrc] = useState<string>('');
+
+  // Pass Type & Team Members
+  const [passType, setPassType] = useState<'solo' | 'team'>('solo');
+  const [teamMemberCount, setTeamMemberCount] = useState<number>(2);
+  const [teamMembers, setTeamMembers] = useState([
+    { name: '', photo: '' },
+    { name: '', photo: '' },
+    { name: '', photo: '' },
+  ]);
+  const [activeCameraMember, setActiveCameraMember] = useState<number | null>(null);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // Step state (1, 2, 3)
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -63,6 +141,238 @@ export default function BuilderPage() {
   const [activeFormat, setActiveFormat] = useState<'card' | 'pfp'>('card');
   const [pfpStyle, setPfpStyle] = useState<'badge' | 'polaroid' | 'cyber'>('badge');
   const [cardTheme, setCardTheme] = useState<'emerald' | 'sunset' | 'ocean' | 'obsidian'>('emerald');
+
+  const renderPhotoOrCollage = (isPfp = false) => {
+    if (passType === 'solo') {
+      return photoSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photoSrc} alt={formData.name || 'Builder Photo'} className={isPfp ? styles.pfpUserPhoto : styles.userPhoto} />
+      ) : (
+        <div className={styles.photoPlaceholder}>
+          <span className={styles.placeholderIcon}>👤</span>
+          <span className={styles.placeholderText}>NO PHOTO</span>
+        </div>
+      );
+    } else {
+      if (isPfp) {
+        if (teamMemberCount === 2) {
+          return (
+            <div className={styles.pfpTeamAvatars2}>
+              {teamMembers.slice(0, 2).map((member, idx) => (
+                <div key={idx} className={styles.pfpTeamAvatarBox2}>
+                  <div className={styles.pfpTeamAvatarCircle}>
+                    {member.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={member.photo} alt={member.name || `Member ${idx + 1}`} className={styles.pfpTeamAvatarImg} />
+                    ) : (
+                      <span className={styles.pfpAvatarPlaceholderIcon}>👤</span>
+                    )}
+                  </div>
+                  <span className={styles.pfpTeamAvatarName}>
+                    {member.name ? member.name.toUpperCase() : `MEMBER ${idx + 1}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        } else {
+          return (
+            <div className={styles.pfpTeamAvatars3}>
+              {teamMembers.slice(0, 3).map((member, idx) => (
+                <div key={idx} className={`${styles.pfpTeamAvatarBox3} ${styles[`pfpTeamAvatarPos${idx}`]}`}>
+                  <div className={styles.pfpTeamAvatarCircle}>
+                    {member.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={member.photo} alt={member.name || `Member ${idx + 1}`} className={styles.pfpTeamAvatarImg} />
+                    ) : (
+                      <span className={styles.pfpAvatarPlaceholderIcon}>👤</span>
+                    )}
+                  </div>
+                  <span className={styles.pfpTeamAvatarName}>
+                    {member.name ? member.name.toUpperCase() : `MEMBER ${idx + 1}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        }
+      } else {
+        if (teamMemberCount === 2) {
+          return (
+            <div className={styles.pfpTeamCollage2}>
+              <div className={styles.pfpTeamSlice}>
+                {teamMembers[0]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[0].photo} alt={teamMembers[0].name || 'Member 1'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>MEMBER 1</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.pfpTeamSlice}>
+                {teamMembers[1]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[1].photo} alt={teamMembers[1].name || 'Member 2'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>MEMBER 2</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        } else {
+          return (
+            <div className={styles.pfpTeamCollage3}>
+              <div className={styles.pfpTeamSliceMain}>
+                {teamMembers[0]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[0].photo} alt={teamMembers[0].name || 'Member 1'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>M1</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.pfpTeamSliceSub}>
+                {teamMembers[1]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[1].photo} alt={teamMembers[1].name || 'Member 2'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>M2</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.pfpTeamSliceSub}>
+                {teamMembers[2]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[2].photo} alt={teamMembers[2].name || 'Member 3'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>M3</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+      }
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+    } catch (err) {
+      console.error('Failed to start webcam:', err);
+      alert('Could not access camera. Please upload an image instead.');
+      setActiveCameraMember(null);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+      streamRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (activeCameraMember !== null) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => stopCamera();
+  }, [activeCameraMember]);
+
+  const handleCapturePhoto = async () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+    
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    const croppedUrl = await autoCropToDataUrl(dataUrl);
+
+    if (activeCameraMember === -1) {
+      setPhotoSrc(croppedUrl);
+      sessionStorage.setItem('hh_cropped_photo', croppedUrl);
+    } else if (activeCameraMember !== null) {
+      setTeamMembers((prev) => {
+        const next = [...prev];
+        next[activeCameraMember] = { ...next[activeCameraMember], photo: croppedUrl };
+        return next;
+      });
+    }
+    setActiveCameraMember(null);
+  };
+
+  const handleFileChangeForMember = async (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    let processFile = file;
+
+    if (
+      file.name.toLowerCase().endsWith('.heic') ||
+      file.name.toLowerCase().endsWith('.heif') ||
+      file.type === 'image/heic' ||
+      file.type === 'image/heif'
+    ) {
+      try {
+        const heic2any = (await import('heic2any')).default;
+        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+        const blobToUse = Array.isArray(converted) ? converted[0] : converted;
+        processFile = new File([blobToUse], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
+      } catch (err) {
+        console.error('HEIC conversion failed:', err);
+      }
+    }
+
+    try {
+      const dataUrl = await compressFileToDataUrl(processFile);
+      const croppedUrl = await autoCropToDataUrl(dataUrl);
+
+      if (idx === -1) {
+        setPhotoSrc(croppedUrl);
+        sessionStorage.setItem('hh_cropped_photo', croppedUrl);
+      } else {
+        setTeamMembers((prev) => {
+          const next = [...prev];
+          next[idx] = { ...next[idx], photo: croppedUrl };
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error('File processing failed:', err);
+    }
+  };
 
   // Form fields start EMPTY as requested by user
   const [formData, setFormData] = useState({
@@ -85,38 +395,53 @@ export default function BuilderPage() {
   useEffect(() => {
     const cropped = sessionStorage.getItem('hh_cropped_photo');
     const raw = sessionStorage.getItem('hh_photo_src');
-    if (cropped) {
-      setPhotoSrc(cropped);
-    } else if (raw) {
-      setPhotoSrc(raw);
-    }
-
     const savedFormat = sessionStorage.getItem('hh_active_format') as 'card' | 'pfp' | null;
-    if (savedFormat) {
-      setActiveFormat(savedFormat);
-    }
-
     const savedPfpStyle = sessionStorage.getItem('hh_pfp_style') as 'badge' | 'polaroid' | 'cyber' | null;
-    if (savedPfpStyle) {
-      setPfpStyle(savedPfpStyle);
-    }
-
     const savedTheme = sessionStorage.getItem('hh_card_theme') as 'emerald' | 'sunset' | 'ocean' | 'obsidian' | null;
-    if (savedTheme) {
-      setCardTheme(savedTheme);
-    }
-
     const savedData = sessionStorage.getItem('hh_builder_data');
-    if (savedData) {
-      try {
-        setFormData((prev) => ({
-          ...prev,
-          ...JSON.parse(savedData),
-        }));
-      } catch {
-        // ignore
+    const savedPassType = sessionStorage.getItem('hh_pass_type') as 'solo' | 'team' | null;
+    const savedMemberCount = sessionStorage.getItem('hh_team_member_count');
+    const savedTeamMembers = sessionStorage.getItem('hh_team_members');
+
+    setTimeout(() => {
+      if (cropped) {
+        setPhotoSrc(cropped);
+      } else if (raw) {
+        setPhotoSrc(raw);
       }
-    }
+      if (savedFormat) {
+        setActiveFormat(savedFormat);
+      }
+      if (savedPfpStyle) {
+        setPfpStyle(savedPfpStyle);
+      }
+      if (savedTheme) {
+        setCardTheme(savedTheme);
+      }
+      if (savedPassType) {
+        setPassType(savedPassType);
+      }
+      if (savedMemberCount) {
+        setTeamMemberCount(parseInt(savedMemberCount, 10));
+      }
+      if (savedTeamMembers) {
+        try {
+          setTeamMembers(JSON.parse(savedTeamMembers));
+        } catch {
+          // ignore
+        }
+      }
+      if (savedData) {
+        try {
+          setFormData((prev) => ({
+            ...prev,
+            ...JSON.parse(savedData),
+          }));
+        } catch {
+          // ignore
+        }
+      }
+    }, 0);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -147,6 +472,9 @@ export default function BuilderPage() {
     sessionStorage.setItem('hh_active_format', activeFormat);
     sessionStorage.setItem('hh_pfp_style', pfpStyle);
     sessionStorage.setItem('hh_card_theme', cardTheme);
+    sessionStorage.setItem('hh_pass_type', passType);
+    sessionStorage.setItem('hh_team_member_count', teamMemberCount.toString());
+    sessionStorage.setItem('hh_team_members', JSON.stringify(teamMembers));
     sessionStorage.setItem('hh_builder_data', JSON.stringify(formData));
     router.push('/card');
   };
@@ -208,18 +536,32 @@ export default function BuilderPage() {
             <span className={styles.resolutionBadge}>HH GOA 2026 ID</span>
           </div>
 
-          {/* ── Format Selector Toggle Bar ── */}
-          <div className={styles.formatToggleBar}>
+          {/* ── Pass Type Selector Toggle Bar ── */}
+          <div className={styles.passTypeToggleBar}>
             <button
               type="button"
-              className={`${styles.formatToggleBtn} ${activeFormat === 'card' ? styles.formatToggleActive : ''}`}
+              className={`${styles.passTypeToggleBtn} ${passType === 'solo' ? styles.passTypeActive : ''}`}
               onClick={() => {
-                setActiveFormat('card');
-                sessionStorage.setItem('hh_active_format', 'card');
+                setPassType('solo');
+                sessionStorage.setItem('hh_pass_type', 'solo');
               }}
             >
-              💳 Format B: Builder Card (Main)
+              👤 Solo Pass
             </button>
+            <button
+              type="button"
+              className={`${styles.passTypeToggleBtn} ${passType === 'team' ? styles.passTypeActive : ''}`}
+              onClick={() => {
+                setPassType('team');
+                sessionStorage.setItem('hh_pass_type', 'team');
+              }}
+            >
+              👥 Team Pass
+            </button>
+          </div>
+
+          {/* ── Format Selector Toggle Bar ── */}
+          <div className={styles.formatToggleBar}>
             <button
               type="button"
               className={`${styles.formatToggleBtn} ${activeFormat === 'pfp' ? styles.formatToggleActive : ''}`}
@@ -229,6 +571,16 @@ export default function BuilderPage() {
               }}
             >
               🖼️ Format A: PFP Frame
+            </button>
+            <button
+              type="button"
+              className={`${styles.formatToggleBtn} ${activeFormat === 'card' ? styles.formatToggleActive : ''}`}
+              onClick={() => {
+                setActiveFormat('card');
+                sessionStorage.setItem('hh_active_format', 'card');
+              }}
+            >
+              💳 Format B: Builder Card (Main)
             </button>
           </div>
 
@@ -311,15 +663,7 @@ export default function BuilderPage() {
                     <span>★ HACKER 🌴 BUILDER ★</span>
                   </div>
                   <div className={styles.pfpPolaroidInner}>
-                    {photoSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoSrc} alt={formData.name || 'Polaroid Avatar'} className={styles.pfpUserPhoto} />
-                    ) : (
-                      <div className={styles.photoPlaceholder}>
-                        <span className={styles.placeholderIcon}>👤</span>
-                        <span className={styles.placeholderText}>NO PHOTO</span>
-                      </div>
-                    )}
+                    {renderPhotoOrCollage(true)}
                   </div>
                   <div className={styles.pfpPolaroidFooter}>
                     <div className={styles.pfpPolaroidInfo}>
@@ -344,35 +688,19 @@ export default function BuilderPage() {
                     HH_GOA_2026 // MORJIM
                   </div>
                   <div className={styles.pfpCyberInner}>
-                    {photoSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoSrc} alt={formData.name || 'Cyber Avatar'} className={styles.pfpUserPhoto} />
-                    ) : (
-                      <div className={styles.photoPlaceholder}>
-                        <span className={styles.placeholderIcon}>👤</span>
-                        <span className={styles.placeholderText}>NO PHOTO</span>
-                      </div>
-                    )}
+                    {renderPhotoOrCollage(true)}
                   </div>
                   <div className={styles.pfpCyberFooter}>
                     <span className={styles.pfpCyberDot} />
-                    <span>{formData.name ? formData.name.toUpperCase() : 'ACTIVE BUILDER'} // {formData.builderTitle || 'SHIPPING'}</span>
+                    <span>{formData.name ? formData.name.toUpperCase() : 'ACTIVE BUILDER'}{" // "}{formData.builderTitle || 'SHIPPING'}</span>
                   </div>
                 </div>
               ) : (
                 /* Variant 1: Circular Avatar Seal */
                 <div className={`${styles.pfpFrameOuter} ${cardTheme === 'sunset' ? styles.themeCyberSunset : cardTheme === 'ocean' ? styles.themeArabianWave : cardTheme === 'obsidian' ? styles.themeObsidianGold : styles.themeEmerald}`}>
                   <div className={styles.pfpFrameInner}>
-                    {photoSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoSrc} alt={formData.name || 'PFP Avatar'} className={styles.pfpUserPhoto} />
-                    ) : (
-                      <div className={styles.photoPlaceholder}>
-                        <span className={styles.placeholderIcon}>👤</span>
-                        <span className={styles.placeholderText}>NO PHOTO</span>
-                      </div>
-                    )}
-
+                    {renderPhotoOrCollage(true)}
+                    
                     {/* Tropical Border Graphic Overlay */}
                     <div className={styles.pfpOverlayGraphic}>
                       <div className={styles.pfpTopBadge}>
@@ -384,7 +712,7 @@ export default function BuilderPage() {
                           <span>🌴</span>
                         </div>
                         {formData.name && (
-                          <span className={styles.pfpNameTag}>{formData.name.toUpperCase()}</span>
+                           <span className={styles.pfpNameTag}>{formData.name.toUpperCase()}</span>
                         )}
                       </div>
                     </div>
@@ -518,39 +846,76 @@ export default function BuilderPage() {
                 </div>
 
                 {/* ── CARD MIDDLE GRID: PHOTO + DETAILS ── */}
-                <div className={styles.cardMainGrid}>
-                  {/* Left Column: Photo & Builder Title */}
-                  <div className={styles.photoCol}>
-                    <div className={styles.photoFrameOuter}>
-                      <div className={styles.photoFrameInner}>
-                        {photoSrc ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={photoSrc} alt={formData.name || 'Builder Photo'} className={styles.userPhoto} />
-                        ) : (
-                          <div className={styles.photoPlaceholder}>
-                            <span className={styles.placeholderIcon}>👤</span>
-                            <span className={styles.placeholderText}>NO PHOTO</span>
+                <div className={passType === 'team' ? `${styles.cardMainGrid} ${styles.teamMainGrid}` : styles.cardMainGrid}>
+                  {/* Left Column: Photo(s) & Builder Title */}
+                  {passType === 'solo' ? (
+                    <div className={styles.photoCol}>
+                      <div className={styles.photoFrameOuter}>
+                        <div className={styles.photoFrameInner}>
+                          {photoSrc ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={photoSrc} alt={formData.name || 'Builder Photo'} className={styles.userPhoto} />
+                          ) : (
+                            <div className={styles.photoPlaceholder}>
+                              <span className={styles.placeholderIcon}>👤</span>
+                              <span className={styles.placeholderText}>NO PHOTO</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Hacker Builder Circular Seal */}
+                        <div className={styles.hackerSeal}>
+                          <span className={styles.sealTop}>HACKER</span>
+                          <span className={styles.sealPalm}>🌴</span>
+                          <span className={styles.sealBottom}>BUILDER</span>
+                        </div>
+                      </div>
+
+                      {/* Builder Title Box */}
+                      <div className={styles.builderTitleBox}>
+                        <span className={styles.builderTitleBadge}>BUILDER TITLE</span>
+                        <div className={styles.builderTitleText}>
+                          <span>{formData.builderTitle ? formData.builderTitle.toUpperCase() : 'THE CODE ARCHITECT'}</span>
+                          <span className={styles.titlePalm}>🌴</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.photoCol}>
+                      <div className={styles.teamMembersRow}>
+                        {teamMembers.slice(0, teamMemberCount).map((member, idx) => (
+                          <div key={idx} className={styles.teamMemberBox}>
+                            <div className={styles.teamPhotoFrameOuter}>
+                              <div className={styles.teamPhotoFrameInner}>
+                                {member.photo ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={member.photo} alt={member.name || `Member ${idx + 1}`} className={styles.userPhoto} />
+                                ) : (
+                                  <div className={styles.photoPlaceholder}>
+                                    <span className={styles.placeholderIcon}>👤</span>
+                                    <span className={styles.placeholderText}>MEMBER {idx + 1}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className={styles.teamMemberSeal}>🌴</div>
+                            </div>
+                            <div className={styles.teamMemberName}>
+                              {member.name ? member.name.toUpperCase() : `MEMBER ${idx + 1}`}
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
 
-                      {/* Hacker Builder Circular Seal */}
-                      <div className={styles.hackerSeal}>
-                        <span className={styles.sealTop}>HACKER</span>
-                        <span className={styles.sealPalm}>🌴</span>
-                        <span className={styles.sealBottom}>BUILDER</span>
+                      {/* Builder Title Box */}
+                      <div className={styles.builderTitleBox}>
+                        <span className={styles.builderTitleBadge}>TEAM TITLE</span>
+                        <div className={styles.builderTitleText}>
+                          <span>{formData.builderTitle ? formData.builderTitle.toUpperCase() : 'THE CODE ARCHITECT'}</span>
+                          <span className={styles.titlePalm}>🌴</span>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Builder Title Box */}
-                    <div className={styles.builderTitleBox}>
-                      <span className={styles.builderTitleBadge}>BUILDER TITLE</span>
-                      <div className={styles.builderTitleText}>
-                        <span>{formData.builderTitle ? formData.builderTitle.toUpperCase() : 'THE CODE ARCHITECT'}</span>
-                        <span className={styles.titlePalm}>🌴</span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Right Column: Name & Details List */}
                   <div className={styles.infoCol}>
@@ -558,14 +923,14 @@ export default function BuilderPage() {
                     <div className={styles.nameRow}>
                       <span className={styles.nameSparkle}>✦</span>
                       <h2 className={`${styles.cardName} ${!formData.name ? styles.dimmedText : ''}`}>
-                        {formData.name ? formData.name.toUpperCase() : 'YOUR NAME'}
+                        {formData.name ? formData.name.toUpperCase() : (passType === 'team' ? 'TEAM NAME' : 'YOUR NAME')}
                       </h2>
                       <span className={styles.nameSparkle}>✦</span>
                     </div>
 
                     {/* Role / Subtitle */}
                     <div className={`${styles.cardRole} ${!formData.role ? styles.dimmedText : ''}`}>
-                      {formData.role ? formData.role.toUpperCase() : 'FULL STACK DEVELOPER'}
+                      {formData.role ? formData.role.toUpperCase() : (passType === 'team' ? 'TEAM OF BUILDERS' : 'FULL STACK DEVELOPER')}
                     </div>
 
                     {/* Detail Rows */}
@@ -775,77 +1140,242 @@ export default function BuilderPage() {
             <div className={styles.stepBody}>
               {/* STEP 1: Basic Info */}
               {currentStep === 1 && (
-                <div className={styles.fieldsGrid}>
-                  <div className={styles.formGroupFull}>
-                    <label className={styles.label}>
-                      FULL NAME <span className={styles.req}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="e.g. Satoshi Nakamoto"
-                      className={styles.input}
-                      maxLength={30}
-                      autoFocus
-                    />
-                  </div>
+                passType === 'solo' ? (
+                  <div className={styles.fieldsGrid}>
+                    <div className={styles.formGroupFull}>
+                      <label className={styles.label}>
+                        FULL NAME <span className={styles.req}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="e.g. Satoshi Nakamoto"
+                        className={styles.input}
+                        maxLength={30}
+                        autoFocus
+                      />
+                    </div>
 
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>ROLE / SUBTITLE</label>
-                    <input
-                      type="text"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      placeholder="e.g. Full Stack Developer"
-                      className={styles.input}
-                      maxLength={35}
-                    />
-                  </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>ROLE / SUBTITLE</label>
+                      <input
+                        type="text"
+                        name="role"
+                        value={formData.role}
+                        onChange={handleChange}
+                        placeholder="e.g. Full Stack Developer"
+                        className={styles.input}
+                        maxLength={35}
+                      />
+                    </div>
 
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>LOCATION</label>
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleChange}
-                      placeholder="e.g. Ahmedabad, India"
-                      className={styles.input}
-                      maxLength={30}
-                    />
-                  </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>LOCATION</label>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        placeholder="e.g. Ahmedabad, India"
+                        className={styles.input}
+                        maxLength={30}
+                      />
+                    </div>
 
-                  <div className={styles.formGroupFull}>
-                    <div className={styles.photoSummaryBox}>
-                      <div className={styles.photoThumbWrap}>
-                        {photoSrc ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={photoSrc} alt="Thumbnail" className={styles.photoThumb} />
-                        ) : (
-                          <div className={styles.photoThumbPlaceholder}>👤</div>
-                        )}
+                    <div className={styles.formGroupFull}>
+                      <div className={styles.photoSummaryBox}>
+                        <div className={styles.photoThumbWrap}>
+                          {photoSrc ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={photoSrc} alt="Thumbnail" className={styles.photoThumb} />
+                          ) : (
+                            <div className={styles.photoThumbPlaceholder}>👤</div>
+                          )}
+                        </div>
+                        <div className={styles.photoSummaryText}>
+                          <p className={styles.photoSummaryTitle}>
+                            {photoSrc ? 'Profile Photo Ready' : 'No Photo Uploaded'}
+                          </p>
+                          <p className={styles.photoSummaryDesc}>
+                            {photoSrc ? 'Ready for your official card' : 'Pick or capture a photo'}
+                          </p>
+                          <div className={styles.photoSummaryButtons}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const input = document.getElementById('solo-file-input');
+                                input?.click();
+                              }}
+                              className={styles.memberPhotoBtn}
+                            >
+                              📁 Upload
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveCameraMember(-1)}
+                              className={styles.memberPhotoBtn}
+                            >
+                              📷 Camera
+                            </button>
+                            <input
+                              type="file"
+                              id="solo-file-input"
+                              accept="image/*"
+                              onChange={(e) => handleFileChangeForMember(e, -1)}
+                              style={{ display: 'none' }}
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => router.push('/editor')}
+                          className={styles.editPhotoLink}
+                        >
+                          {photoSrc ? 'Adjust Crop ↺' : 'Add Photo +'}
+                        </button>
                       </div>
-                      <div className={styles.photoSummaryText}>
-                        <p className={styles.photoSummaryTitle}>
-                          {photoSrc ? 'Profile Photo Ready' : 'No Photo Uploaded'}
-                        </p>
-                        <p className={styles.photoSummaryDesc}>
-                          {photoSrc ? 'Ready for your official card' : 'Pick or capture a photo'}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => router.push('/editor')}
-                        className={styles.editPhotoLink}
-                      >
-                        {photoSrc ? 'Adjust Crop ↺' : 'Add Photo +'}
-                      </button>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className={styles.fieldsGrid}>
+                    <div className={styles.formGroupFull}>
+                      <label className={styles.label}>
+                        TEAM NAME <span className={styles.req}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="e.g. The Pixel Pioneers"
+                        className={styles.input}
+                        maxLength={30}
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>TEAM SUBTITLE</label>
+                      <input
+                        type="text"
+                        name="role"
+                        value={formData.role}
+                        onChange={handleChange}
+                        placeholder="e.g. Hacker House Builders"
+                        className={styles.input}
+                        maxLength={35}
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>TEAM LOCATION</label>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        placeholder="e.g. Bangalore & Goa"
+                        className={styles.input}
+                        maxLength={30}
+                      />
+                    </div>
+
+                    <div className={styles.formGroupFull}>
+                      <label className={styles.label}>TEAM SIZE (2 - 3 MEMBERS)</label>
+                      <div className={styles.memberCountRow}>
+                        <button
+                          type="button"
+                          className={`${styles.memberCountBtn} ${teamMemberCount === 2 ? styles.memberCountBtnActive : ''}`}
+                          onClick={() => setTeamMemberCount(2)}
+                        >
+                          2 Members
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.memberCountBtn} ${teamMemberCount === 3 ? styles.memberCountBtnActive : ''}`}
+                          onClick={() => setTeamMemberCount(3)}
+                        >
+                          3 Members
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className={styles.formGroupFull}>
+                      <label className={styles.label}>TEAM MEMBERS REGISTER</label>
+                      <div className={styles.teamMembersFields}>
+                        {Array.from({ length: teamMemberCount }).map((_, idx) => (
+                          <div key={idx} className={styles.teamMemberFormGroup}>
+                            <h4 className={styles.memberFormTitle}>MEMBER 0{idx + 1}</h4>
+                            <div className={styles.memberFormRow}>
+                              <div className={styles.memberFormInputCol}>
+                                <label className={styles.label}>FULL NAME</label>
+                                <input
+                                  type="text"
+                                  placeholder={`Member ${idx + 1} Name`}
+                                  value={teamMembers[idx]?.name || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setTeamMembers((prev) => {
+                                      const next = [...prev];
+                                      next[idx] = { ...next[idx], name: val };
+                                      return next;
+                                    });
+                                  }}
+                                  className={styles.input}
+                                  maxLength={25}
+                                />
+                              </div>
+
+                              <div className={styles.memberFormPhotoCol}>
+                                <label className={styles.label}>PHOTO</label>
+                                <div className={styles.memberPhotoControls}>
+                                  <div className={styles.memberPhotoThumb}>
+                                    {teamMembers[idx]?.photo ? (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img src={teamMembers[idx].photo} alt="Member thumb" className={styles.memberThumbImg} />
+                                    ) : (
+                                      <span className={styles.memberThumbPlaceholder}>👤</span>
+                                    )}
+                                  </div>
+                                  <div className={styles.memberPhotoButtons}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const input = document.getElementById(`member-file-${idx}`);
+                                        input?.click();
+                                      }}
+                                      className={styles.memberPhotoBtn}
+                                    >
+                                      📁 Upload
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setActiveCameraMember(idx);
+                                      }}
+                                      className={styles.memberPhotoBtn}
+                                    >
+                                      📷 Camera
+                                    </button>
+                                    <input
+                                      type="file"
+                                      id={`member-file-${idx}`}
+                                      accept="image/*"
+                                      onChange={(e) => handleFileChangeForMember(e, idx)}
+                                      style={{ display: 'none' }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )
               )}
 
               {/* STEP 2: Stack & Builder Title */}
@@ -1037,6 +1567,26 @@ export default function BuilderPage() {
           </div>
         </section>
       </main>
+
+      {/* 📸 CAMERA CAPTURE MODAL */}
+      {activeCameraMember !== null && (
+        <div className={styles.cameraModal}>
+          <div className={styles.cameraModalContent}>
+            <h3>📸 CAPTURE MEMBER PHOTO</h3>
+            <div className={styles.cameraPreviewContainer}>
+              <video ref={videoRef} autoPlay playsInline muted className={styles.cameraVideo} />
+            </div>
+            <div className={styles.cameraModalActions}>
+              <button type="button" onClick={handleCapturePhoto} className={styles.captureBtn}>
+                📸 SNAP PHOTO
+              </button>
+              <button type="button" onClick={() => setActiveCameraMember(null)} className={styles.cancelBtn}>
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

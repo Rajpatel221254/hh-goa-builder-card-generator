@@ -85,8 +85,11 @@ export default function CameraPage() {
   }, []);
 
   useEffect(() => {
-    startCamera(facingMode);
+    const timer = setTimeout(() => {
+      startCamera(facingMode);
+    }, 0);
     return () => {
+      clearTimeout(timer);
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,22 +127,60 @@ export default function CameraPage() {
     setTimeout(() => setFlashActive(false), 300);
   }, [facingMode]);
 
-  /* Use captured photo — navigate to editor */
-  const handleUsePhoto = useCallback(() => {
+  /* Use captured photo — navigate to builder page after auto-cropping */
+  const handleUsePhoto = useCallback(async () => {
     if (!captured) return;
+
+    const autoCrop = async (src: string): Promise<string> => {
+      return new Promise((resolve) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(src);
+            return;
+          }
+          const targetW = 600;
+          const targetH = 800; // 3:4 aspect
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const imgW = img.naturalWidth;
+          const imgH = img.naturalHeight;
+          const aspect = 3 / 4;
+          let sx = 0, sy = 0, sw = imgW, sh = imgH;
+          if (imgW / aspect > imgH) {
+            sw = imgH * aspect;
+            sx = (imgW - sw) / 2;
+          } else {
+            sh = imgW / aspect;
+            sy = (imgH - sh) / 2;
+          }
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        };
+        img.onerror = () => resolve(src);
+        img.src = src;
+      });
+    };
+
     try {
+      const cropped = await autoCrop(captured);
       sessionStorage.setItem('hh_photo_src', captured);
       sessionStorage.setItem('hh_photo_type', 'camera');
+      sessionStorage.setItem('hh_cropped_photo', cropped);
     } catch {
       sessionStorage.clear();
       try {
+        const cropped = await autoCrop(captured);
         sessionStorage.setItem('hh_photo_src', captured);
         sessionStorage.setItem('hh_photo_type', 'camera');
+        sessionStorage.setItem('hh_cropped_photo', cropped);
       } catch (e) {
         console.error('Camera storage error:', e);
       }
     }
-    router.push('/editor');
+    router.push('/builder');
   }, [captured, router]);
 
   /* Retake */

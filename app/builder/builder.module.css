@@ -2087,3 +2087,1006 @@
     padding: 0.4rem 0.25rem;
   }
 }
+
+/* ─── Pass Type Toggle Bar ─── */
+.passTypeToggleBar {
+  display: flex;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(245, 200, 0, 0.25);
+  border-radius: 10px;
+  padding: 0.25rem;
+  margin-bottom: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.passTypeToggleBtn {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(253, 245, 224, 0.6);
+  background: transparent;
+  border: none;
+  padding: 0.45rem 0.75rem;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all 150ms ease;
+}
+
+.passTypeActive {
+  background: var(--yellow);
+  color: #0c3b1c;
+  box-shadow: 0 4px 12px rgba(245, 200, 0, 0.25);
+}
+
+/* ─── Member Count Selector ─── */
+.memberCountRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.memberCountBtn {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(253, 245, 224, 0.8);
+  background: rgba(245, 200, 0, 0.06);
+  border: 1px solid rgba(245, 200, 0, 0.25);
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.memberCountBtnActive {
+  background: var(--pink);
+  border-color: var(--pink);
+  color: #ffffff;
+}
+
+/* ─── Team Members Preview Layout ─── */
+.teamMainGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.teamMembersRow {
+  display: flex;
+  flex-direction: row;
+  gap: 0.45rem;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.teamMemberBox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.teamPhotoFrameOuter {
+  position: relative;
+  background: var(--yellow);
+  padding: 2.5px;
+  border-radius: 10px;
+  box-shadow: 2px 2px 0 #072210;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.teamPhotoFrameInner {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: #061e0e;
+  border-radius: 7px;
+  overflow: hidden;
+  position: relative;
+  border: 1.5px solid #ffffff;
+}
+
+.teamMemberSeal {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--pink);
+  border: 1px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  z-index: 8;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+}
+
+.teamMemberName {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  font-weight: 700;
+  color: var(--cream);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  letter-spacing: 0.02em;
+}
+
+/* ─── PFP Team Collage Layouts ─── */
+.pfpTeamCollage2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pfpTeamCollage3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pfpTeamSlice {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pfpTeamSlice:first-of-type {
+  border-right: 2px solid var(--yellow);
+}
+
+.pfpTeamSliceMain {
+  grid-row: span 2;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-right: 2px solid var(--yellow);
+}
+
+.pfpTeamSliceSub {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pfpTeamSliceSub:first-of-type {
+  border-bottom: 2px solid var(--yellow);
+}
+
+/* ─── Form Inputs / Uploads ─── */
+.teamMembersFields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.teamMemberFormGroup {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(253, 245, 224, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.memberFormTitle {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--pink);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 0.1em;
+}
+
+.memberFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.memberFormInputCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.memberFormPhotoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.memberPhotoControls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.memberPhotoThumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  background: #061e0e;
+  border: 1px solid var(--yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.memberThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.memberThumbPlaceholder {
+  font-size: 1.1rem;
+  opacity: 0.4;
+}
+
+.memberPhotoButtons {
+  display: flex;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.memberPhotoBtn {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(253, 245, 224, 0.08);
+  border: 1px solid rgba(253, 245, 224, 0.2);
+  padding: 0.35rem 0.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.memberPhotoBtn:hover {
+  background: rgba(253, 245, 224, 0.2);
+  border-color: var(--yellow);
+}
+
+.photoSummaryButtons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+/* ─── Camera Modal Styles ─── */
+.cameraModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+
+.cameraModalContent {
+  background: #0d3d1e;
+  border: 2px solid var(--yellow);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cameraModalContent h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--yellow);
+  letter-spacing: 0.05em;
+}
+
+.cameraPreviewContainer {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.cameraVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror */
+}
+
+.cameraModalActions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.captureBtn {
+  flex: 1.5;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: var(--pink);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.captureBtn:hover {
+  filter: brightness(1.1);
+}
+
+.cancelBtn {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ─── PASS TYPE SWITCHER / TOGGLE BAR ─── */
+.passTypeToggleBar {
+  display: flex;
+  background: rgba(14, 61, 31, 0.45);
+  border: 1.5px solid var(--yellow);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 4px;
+  margin-bottom: 1rem;
+}
+
+.passTypeToggleBtn {
+  flex: 1;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.passTypeToggleBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.passTypeActive {
+  background: var(--yellow) !important;
+  color: #072210 !important;
+}
+
+/* ─── TEAM MEMBER SIZE SELECTOR ─── */
+.memberCountRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.memberCountBtn {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.memberCountBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.memberCountBtnActive {
+  background: var(--pink) !important;
+  color: #fff !important;
+  border-color: var(--pink) !important;
+}
+
+/* ─── TEAM MEMBERS REGISTER FORM GROUP ─── */
+.teamMembersFields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  background: rgba(4, 20, 10, 0.4);
+  border: 1px solid rgba(245, 200, 0, 0.25);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.teamMemberFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-bottom: 1px dashed rgba(245, 200, 0, 0.15);
+  padding-bottom: 1.25rem;
+}
+
+.teamMemberFormGroup:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.memberFormTitle {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--yellow);
+  letter-spacing: 0.05em;
+}
+
+.memberFormRow {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.memberFormInputCol {
+  flex: 1;
+}
+
+.memberFormPhotoCol {
+  width: 140px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.memberPhotoControls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.memberPhotoThumb {
+  width: 90px;
+  height: 120px;
+  border-radius: 6px;
+  border: 1.5px solid var(--yellow);
+  overflow: hidden;
+  background: #061e0e;
+  position: relative;
+}
+
+.memberThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.memberThumbPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(245, 200, 0, 0.3);
+  font-size: 0.65rem;
+}
+
+.memberPhotoButtons {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.memberPhotoBtn {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 0.35rem 0.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  text-align: center;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.memberPhotoBtn:first-child {
+  background: var(--yellow);
+  color: #072210;
+}
+
+.memberPhotoBtn:last-child {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.memberPhotoBtn:hover {
+  filter: brightness(1.1);
+}
+
+/* ─── TEAM LAYOUT GRID ─── */
+.teamMainGrid {
+  grid-template-columns: 1fr !important;
+}
+
+.teamMembersRow {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-around;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.teamMemberBox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 110px;
+}
+
+.teamPhotoFrameOuter {
+  position: relative;
+  background: var(--yellow);
+  padding: 2.5px;
+  border-radius: 10px;
+  box-shadow: 1.5px 2px 0 #072210;
+  width: 100%;
+}
+
+.teamPhotoFrameInner {
+  width: 100%;
+  height: 120px;
+  background: #061e0e;
+  border-radius: 7px;
+  overflow: hidden;
+  position: relative;
+  border: 1.5px solid #ffffff;
+}
+
+.teamMemberSeal {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--yellow);
+  border: 1.5px solid #0e3d1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  z-index: 5;
+}
+
+.teamMemberName {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+/* ─── COLLAGES FOR FORMAT A PFP FRAMES ─── */
+.pfpTeamCollage2 {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.pfpTeamSlice {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.pfpTeamSlice:first-child {
+  border-right: 1.5px solid var(--yellow);
+}
+
+.pfpTeamCollage3 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+  gap: 1.5px;
+  background: var(--yellow);
+}
+
+.pfpTeamSliceMain {
+  grid-row: span 2;
+  position: relative;
+  overflow: hidden;
+  background: #061e0e;
+}
+
+.pfpTeamSliceSub {
+  position: relative;
+  overflow: hidden;
+  background: #061e0e;
+}
+
+/* ─── PFP TEAM AVATARS LAYOUTS (Format A) ─── */
+.pfpTeamAvatars2 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  background: radial-gradient(circle, #0e3d1f 0%, #051a0d 100%);
+  position: relative;
+}
+
+.pfpTeamAvatarBox2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  max-width: 120px;
+}
+
+.pfpTeamAvatarCircle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 3px solid var(--yellow);
+  overflow: hidden;
+  background: #061e0e;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.pfpTeamAvatarImg {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.pfpAvatarPlaceholderIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 2.2rem;
+  opacity: 0.5;
+  color: var(--yellow);
+  font-family: var(--font-mono);
+}
+
+.pfpTeamAvatarName {
+  background: rgba(245, 200, 0, 0.95);
+  color: #072210;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.pfpTeamAvatars3 {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #0e3d1f 0%, #051a0d 100%);
+  overflow: hidden;
+}
+
+.pfpTeamAvatarBox3 {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pfpTeamAvatarPos0 {
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+.pfpTeamAvatarPos1 {
+  bottom: 12%;
+  left: 10%;
+  z-index: 2;
+}
+
+.pfpTeamAvatarPos2 {
+  bottom: 12%;
+  right: 10%;
+  z-index: 2;
+}
+
+.pfpTeamAvatarBox3 .pfpTeamAvatarCircle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid var(--yellow);
+  overflow: hidden;
+  background: #061e0e;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.pfpTeamAvatarBox3 .pfpTeamAvatarName {
+  background: rgba(245, 200, 0, 0.95);
+  color: #072210;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 1.5px 6px;
+  border-radius: 8px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — BUILDER PAGE
+   Breakpoints: ≤900px (tablet), ≤640px (phone), ≤400px (tiny)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet: Stack columns ── */
+@media (max-width: 900px) {
+  .studioLayout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1rem 1rem 3rem;
+  }
+
+  .previewSection {
+    max-width: 100%;
+    order: 1;
+  }
+
+  /* Form section comes second on mobile (after preview) */
+  .studioLayout > *:last-child {
+    order: 2;
+  }
+}
+
+/* ── Phone: Full width, tight spacing ── */
+@media (max-width: 640px) {
+  .studioLayout {
+    padding: 0.75rem 0.75rem 4rem;
+    gap: 1rem;
+  }
+
+  /* Pass type toggle: slightly smaller text */
+  .passTypeToggleBar {
+    margin-bottom: 0.6rem;
+  }
+
+  .passTypeToggleBtn {
+    font-size: 0.65rem;
+    padding: 0.4rem 0.45rem;
+    gap: 0.2rem;
+  }
+
+  /* Format A / B toggle */
+  .formatToggleBar {
+    padding: 3px;
+    margin-bottom: 0.85rem;
+  }
+
+  .formatToggleBtn {
+    font-size: 0.65rem;
+    padding: 7px 8px;
+    gap: 4px;
+  }
+
+  /* Theme & Variant selectors */
+  .themeSelectorBar {
+    padding: 0.5rem 0.6rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .themeSelectorLabel {
+    font-size: 0.55rem;
+  }
+
+  /* Theme pills: 2 columns on phone */
+  .themePillsRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem;
+  }
+
+  /* Variant pills: 3 columns still fit if tiny text */
+  .variantPillsRow {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem;
+  }
+
+  .variantPillsRow .themePill {
+    font-size: 0.55rem;
+    padding: 0.38rem 0.15rem;
+    gap: 0.15rem;
+  }
+
+  .themePill {
+    font-size: 0.58rem;
+    padding: 0.4rem 0.25rem;
+  }
+
+  /* Member count buttons */
+  .memberCountRow {
+    gap: 0.35rem;
+  }
+
+  .memberCountBtn {
+    font-size: 0.65rem;
+    padding: 0.38rem 0.5rem;
+  }
+
+  /* Team member preview row — allow wrap so 3rd doesn't clip */
+  .teamMembersRow {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+  }
+
+  .teamMemberBox {
+    flex: 0 0 calc(33% - 0.4rem);
+    max-width: calc(33% - 0.4rem);
+  }
+
+  /* Team photo frame: shorter aspect to save vertical space */
+  .teamPhotoFrameInner {
+    height: 90px;
+  }
+
+  .teamMemberName {
+    font-size: 0.45rem;
+  }
+
+  /* Team form: stack input + photo vertically */
+  .memberFormRow {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .memberFormPhotoCol {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .memberPhotoThumb {
+    width: 70px;
+    height: 90px;
+    flex-shrink: 0;
+  }
+
+  .memberPhotoControls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .memberPhotoButtons {
+    flex-direction: row;
+    gap: 0.3rem;
+  }
+}
+
+/* ── Tiny phones (≤400px) ── */
+@media (max-width: 400px) {
+  .studioLayout {
+    padding: 0.5rem 0.5rem 4rem;
+  }
+
+  .passTypeToggleBtn {
+    font-size: 0.6rem;
+    padding: 0.35rem 0.3rem;
+  }
+
+  .formatToggleBtn {
+    font-size: 0.58rem;
+    padding: 6px 5px;
+  }
+
+  /* Variant pills: 1 per row on very small screens */
+  .variantPillsRow {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .variantPillsRow .themePill {
+    font-size: 0.6rem;
+    padding: 0.45rem 0.5rem;
+  }
+
+  /* Team member boxes: 2 per row on very tiny screens */
+  .teamMemberBox {
+    flex: 0 0 calc(50% - 0.4rem);
+    max-width: calc(50% - 0.4rem);
+  }
+
+  .teamPhotoFrameInner {
+    height: 80px;
+  }
+
+  .memberCountBtn {
+    font-size: 0.6rem;
+    padding: 0.35rem 0.4rem;
+  }
+}

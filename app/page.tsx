@@ -52,11 +52,97 @@ function safeSetSessionItem(key: string, value: string) {
   }
 }
 
+function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: string; prefix?: string; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const elementRef = useRef<HTMLSpanElement>(null);
+
+  const target = parseInt(value.replace(/[^0-9]/g, ''), 10) || 0;
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          const duration = 1500;
+          const startTime = performance.now();
+
+          const animate = (currentTime: number) => {
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            const currentCount = Math.floor(easeProgress * target);
+            setCount(currentCount);
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setCount(target);
+            }
+          };
+
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const el = elementRef.current;
+    if (el) observer.observe(el);
+    return () => {
+      if (el) observer.unobserve(el);
+    };
+  }, [target, hasAnimated]);
+
+  return (
+    <span ref={elementRef} className={hasAnimated ? styles.pulsingStat : ''}>
+      {prefix}
+      {hasAnimated ? count : '0'}
+      {suffix}
+    </span>
+  );
+}
+
+async function autoCropToDataUrl(src: string, aspect = 3 / 4): Promise<string> {
+  return new Promise((resolve) => {
+    const img = document.createElement('img');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(src);
+        return;
+      }
+      const targetW = 600;
+      const targetH = Math.round(targetW / aspect);
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const imgW = img.naturalWidth;
+      const imgH = img.naturalHeight;
+      let sx = 0, sy = 0, sw = imgW, sh = imgH;
+      if (imgW / aspect > imgH) {
+        sw = imgH * aspect;
+        sx = (imgW - sw) / 2;
+      } else {
+        sh = imgW / aspect;
+        sy = (imgH - sh) / 2;
+      }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
+
 export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const [showCelebration, setShowCelebration] = useState(true);
+  const [isBuilding, setIsBuilding] = useState(false);
+  const [buildingStep, setBuildingStep] = useState('> INITIALIZING SECURE BUILDER ENVIRONMENT...');
 
   // Load photo & form data if already in session to make the center card live!
   const [photoSrc, setPhotoSrc] = useState<string | null>(null);
@@ -76,12 +162,13 @@ export default function HomePage() {
     vibe: 'BUILDING IDEAS. BREAKING LIMITS.',
   });
 
-  // Laptop terminal state
-  const [terminalLines, setTerminalLines] = useState<string[]>([
+  // Laptop terminal state with real character typewriter effect
+  const [historyLines, setHistoryLines] = useState<string[]>([
     '> HH_GOA_2026: STARTING SPRINT...',
     '> HACKERS ACTIVE: 390+',
-    '> SYSTEM STATUS: SHIP OR SHIP! 🚀',
   ]);
+  const [currentLine, setCurrentLine] = useState('');
+  const [messageIndex, setMessageIndex] = useState(0);
 
   // Unmount celebration elements after 5.5 seconds to keep DOM clean
   useEffect(() => {
@@ -95,42 +182,186 @@ export default function HomePage() {
     if (typeof window !== 'undefined') {
       const cropped = sessionStorage.getItem('hh_cropped_photo');
       const raw = sessionStorage.getItem('hh_photo_src');
-      if (cropped || raw) {
-        setPhotoSrc(cropped || raw);
-      }
-
       const savedData = sessionStorage.getItem('hh_builder_data');
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData);
-          setFormData((prev) => ({ ...prev, ...parsed }));
-        } catch (e) {
-          // ignore
+
+      setTimeout(() => {
+        if (cropped || raw) {
+          setPhotoSrc(cropped || raw);
         }
-      }
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            setFormData((prev) => ({ ...prev, ...parsed }));
+          } catch (e) {
+            // ignore
+          }
+        }
+      }, 0);
     }
   }, []);
 
-  // Cycle terminal messages for the laptop screen
+  // Character typing simulator for the laptop terminal
   useEffect(() => {
     const messages = [
-      '> LOAD_FUEL: COFFEE & CHAI LOADED ☕',
-      '> CODE_BASE: COMPILING REPOS...',
-      '> SHIP_SPEED: 100+ SHIPPED!',
-      '> BOUNTY_POOL: $50K+ ACTIVE 💰',
-      '> MISSION: SOLVE PROB, CODE VIBES',
-      '> LOCATION: MORJIM BEACH, GOA 🏖️',
+      'BUILD. SHIP. DEPLOY. Repeat. 💻',
+      'LOAD_FUEL: COFFEE & CHAI LOADED ☕',
+      'CODE_BASE: COMPILING REPOS...',
+      'SHIP_SPEED: 100+ SHIPPED!',
+      'BOUNTY_POOL: $50K+ ACTIVE 💰',
+      'MISSION: SOLVE PROB, CODE VIBES',
+      'LOCATION: MORJIM BEACH, GOA 🏖️',
+      'SYSTEM STATUS: SHIP OR SHIP! 🚀',
     ];
 
-    const timer = setInterval(() => {
-      setTerminalLines((prev) => {
-        const nextMsg = messages[Math.floor(Math.random() * messages.length)];
-        return [...prev.slice(1), nextMsg];
-      });
-    }, 3000);
+    let timer: NodeJS.Timeout;
+    let charIndex = 0;
+    const fullText = '> ' + messages[messageIndex];
 
-    return () => clearInterval(timer);
+    const typeChar = () => {
+      if (charIndex < fullText.length) {
+        setCurrentLine(fullText.substring(0, charIndex + 1));
+        charIndex++;
+        timer = setTimeout(typeChar, 50 + Math.random() * 30);
+      } else {
+        timer = setTimeout(() => {
+          setHistoryLines((prev) => {
+            const nextHistory = [...prev, fullText];
+            if (nextHistory.length > 3) {
+              return nextHistory.slice(1);
+            }
+            return nextHistory;
+          });
+          setMessageIndex((prev) => (prev + 1) % messages.length);
+        }, 2500);
+      }
+    };
+
+    // Defer state reset and typing execution to avoid synchronous setState inside render-loop
+    timer = setTimeout(() => {
+      setCurrentLine('');
+      typeChar();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [messageIndex]);
+
+  // Handle building step cycling text
+  useEffect(() => {
+    if (!isBuilding) return;
+    const steps = [
+      '> INITIALIZING SECURE BUILDER ENVIRONMENT...',
+      '> PARSING PHOTO & BIO METADATA...',
+      '> COMPILING CURRICULUM & SKILLSTACK...',
+      '> DEPLOYING COLLECTIBLE BADGE TO GOA VILLA...',
+    ];
+    let stepIdx = 0;
+    const interval = setInterval(() => {
+      stepIdx++;
+      if (stepIdx < steps.length) {
+        setBuildingStep(steps[stepIdx]);
+      }
+    }, 450);
+    return () => clearInterval(interval);
+  }, [isBuilding]);
+
+  // Scroll Reveal & Timeline Scroll Progress Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.scrollRevealActive);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    const revealElements = document.querySelectorAll(`.${styles.scrollReveal}`);
+    revealElements.forEach((el) => observer.observe(el));
+
+    const handleScroll = () => {
+      const journey = document.getElementById('journey');
+      if (!journey) return;
+      const rect = journey.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+
+      const totalHeight = rect.height + windowHeight;
+      const scrolled = windowHeight - rect.top;
+      const progress = Math.max(0, Math.min(100, (scrolled / totalHeight) * 100));
+      journey.style.setProperty('--timeline-progress', `${progress}%`);
+
+      const frames = journey.querySelectorAll(`.${styles.hangingFrame}`);
+      let closestIndex = -1;
+      let minDistance = Infinity;
+      frames.forEach((frame, idx) => {
+        const frameRect = frame.getBoundingClientRect();
+        const frameCenter = frameRect.top + frameRect.height / 2;
+        const screenCenter = windowHeight / 2;
+        const distance = Math.abs(frameCenter - screenCenter);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = idx;
+        }
+      });
+
+      frames.forEach((frame, idx) => {
+        if (idx === closestIndex && minDistance < 200) {
+          frame.classList.add(styles.activeDay);
+        } else {
+          frame.classList.remove(styles.activeDay);
+        }
+      });
+    };
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      // Calculate normalized mouse positions from -1 to 1 relative to center
+      const x = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+      const y = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+
+      const mainEl = document.getElementById('main-content');
+      if (mainEl) {
+        mainEl.style.setProperty('--parallax-x', `${x}`);
+        mainEl.style.setProperty('--parallax-y', `${y}`);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('mousemove', handleWindowMouseMove, { passive: true });
+    handleScroll();
+
+    return () => {
+      revealElements.forEach((el) => observer.unobserve(el));
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleWindowMouseMove);
+    };
   }, []);
+
+  // Card 3D tilt handlers
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    const rotateY = ((x - xc) / xc) * 8;
+    const rotateX = -((y - yc) / yc) * 8;
+    card.style.setProperty('--rotate-x', `${rotateX}deg`);
+    card.style.setProperty('--rotate-y', `${rotateY}deg`);
+    card.style.setProperty('--glow-x', `${(x / rect.width) * 100}%`);
+    card.style.setProperty('--glow-y', `${(y / rect.height) * 100}%`);
+  };
+
+  const handleMouseLeave = () => {
+    const card = cardRef.current;
+    if (!card) return;
+    card.style.setProperty('--rotate-x', '0deg');
+    card.style.setProperty('--rotate-y', '0deg');
+    card.style.setProperty('--glow-x', '50%');
+    card.style.setProperty('--glow-y', '50%');
+  };
 
   const handleGalleryPick = useCallback(() => {
     fileInputRef.current?.click();
@@ -171,7 +402,16 @@ export default function HomePage() {
         if (compressedDataUrl) {
           safeSetSessionItem('hh_photo_src', compressedDataUrl);
           safeSetSessionItem('hh_photo_type', 'gallery');
-          router.push('/editor');
+
+          // Instantly auto-crop the image to 3:4 portrait
+          const croppedUrl = await autoCropToDataUrl(compressedDataUrl);
+          safeSetSessionItem('hh_cropped_photo', croppedUrl);
+
+          setIsBuilding(true);
+          setBuildingStep('> PARSING PHOTO & BIO METADATA...');
+          setTimeout(() => {
+            router.push('/builder');
+          }, 600);
         }
       } catch (err) {
         console.error('File compression error:', err);
@@ -180,7 +420,7 @@ export default function HomePage() {
     [router]
   );
 
-  const handleUseSamplePhoto = useCallback(() => {
+  const handleUseSamplePhoto = useCallback(async () => {
     // High quality sample hacker avatar for quick testing
     const sampleCanvas = document.createElement('canvas');
     sampleCanvas.width = 600;
@@ -214,12 +454,22 @@ export default function HomePage() {
       const sampleUrl = sampleCanvas.toDataURL('image/jpeg', 0.9);
       safeSetSessionItem('hh_photo_src', sampleUrl);
       safeSetSessionItem('hh_photo_type', 'sample');
-      router.push('/editor');
+      safeSetSessionItem('hh_cropped_photo', sampleUrl); // Already 3:4
+
+      setIsBuilding(true);
+      setBuildingStep('> PARSING PHOTO & BIO METADATA...');
+      setTimeout(() => {
+        router.push('/builder');
+      }, 600);
     }
   }, [router]);
 
   const handleCapture = useCallback(() => {
-    router.push('/camera');
+    setIsBuilding(true);
+    setBuildingStep('> OPENING CAMERA INTERFACE...');
+    setTimeout(() => {
+      router.push('/camera');
+    }, 600);
   }, [router]);
 
   return (
@@ -445,7 +695,7 @@ export default function HomePage() {
       </header>
 
       {/* ── BACKGROUND FLOATING TROPICAL DECORATIONS ── */}
-      <div className={`${styles.floatingDecor} ${styles.decorLeft}`} aria-hidden="true">
+      <div className={`${styles.floatingDecor} ${styles.decorLeft} ${styles.parallaxWrapper}`} style={{ '--depth': -12 } as React.CSSProperties} aria-hidden="true">
         <div className={styles.palmTreeWrap}>
           <svg viewBox="0 0 120 340" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M65 340 C62 300 56 260 54 220 C52 185 56 155 60 125" stroke="#1d6b35" strokeWidth="12" strokeLinecap="round" fill="none" />
@@ -456,6 +706,8 @@ export default function HomePage() {
             <path d="M60 125 C35 140 12 152 4 170" stroke="#1d6b35" strokeWidth="3.5" strokeLinecap="round" fill="none" />
           </svg>
         </div>
+      </div>
+      <div className={`${styles.decorLeftStamp} ${styles.parallaxWrapper}`} style={{ '--depth': -22 } as React.CSSProperties} aria-hidden="true">
         <div className={styles.stampCircle}>
           <div className={styles.stampCircleInner}>
             <span>BUILT</span><span>IN</span><span>GOA</span><span>★</span>
@@ -463,7 +715,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className={`${styles.floatingDecor} ${styles.decorRight}`} aria-hidden="true">
+      <div className={`${styles.floatingDecor} ${styles.decorRight} ${styles.parallaxWrapper}`} style={{ '--depth': -12 } as React.CSSProperties} aria-hidden="true">
         <div className={styles.palmTreeWrap} style={{ transform: 'scaleX(-1)' }}>
           <svg viewBox="0 0 120 340" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M65 340 C62 300 56 260 54 220 C52 185 56 155 60 125" stroke="#1d6b35" strokeWidth="12" strokeLinecap="round" fill="none" />
@@ -474,6 +726,8 @@ export default function HomePage() {
             <path d="M60 125 C35 140 12 152 4 170" stroke="#1d6b35" strokeWidth="3.5" strokeLinecap="round" fill="none" />
           </svg>
         </div>
+      </div>
+      <div className={`${styles.decorRightBadge} ${styles.parallaxWrapper}`} style={{ '--depth': -22 } as React.CSSProperties} aria-hidden="true">
         <div className={styles.decorBadge}>
           <span>BUILDER ID</span>
         </div>
@@ -481,6 +735,135 @@ export default function HomePage() {
 
       {/* ── SECTION 1: HERO ID GENERATOR ── */}
       <section className={styles.heroSection} aria-label="Identity Generator">
+        
+        {/* Top Hero Side Decorations */}
+        <div className={`${styles.sideDecorZone} ${styles.sideLeft} ${styles.heroTopSide}`} aria-hidden="true">
+          <div className={styles.parallaxWrapper} style={{ '--depth': -5 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              <span className={styles.accentPink}>&gt;_</span> BUILDING...
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -15 } as React.CSSProperties}>
+            <div className={`${styles.sticker} ${styles.stickerPink} ${styles.floatSlow}`}>
+              <span>BUILD</span>
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -10 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              ★ GOA 2026
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -25 } as React.CSSProperties}>
+            <div className={styles.dottedGrid} />
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -8 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              01
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -18 } as React.CSSProperties}>
+            <div className={styles.techLineWrapper}>
+              <span className={styles.pulsingDot}>★</span>
+              <span className={styles.techLine} />
+              <span className={styles.pulsingDot}>&gt;_</span>
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -12 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              ↗ SHIP IT
+            </div>
+          </div>
+        </div>
+
+        <div className={`${styles.sideDecorZone} ${styles.sideRight} ${styles.heroTopSide}`} aria-hidden="true">
+          <div className={styles.parallaxWrapper} style={{ '--depth': -6 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              <span className={styles.accentYellow}>&gt;_</span> SYSTEM READY
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -16 } as React.CSSProperties}>
+            <div className={`${styles.sticker} ${styles.stickerYellow} ${styles.floatMed}`}>
+              <span>HACK</span>
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -10 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              ⚡ BUILD
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -20 } as React.CSSProperties}>
+            <div className={styles.dottedGrid} />
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -8 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              04
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -14 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              GOA // INDIA
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -12 } as React.CSSProperties}>
+            <div className={`${styles.sticker} ${styles.stickerCream} ${styles.floatSlow}`}>
+              <span>24/7</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Upload Section Side Decorations */}
+        <div className={`${styles.sideDecorZone} ${styles.sideLeft} ${styles.heroBottomSide}`} aria-hidden="true">
+          <div className={styles.parallaxWrapper} style={{ '--depth': -8 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              [📷] CAPTURE
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -18 } as React.CSSProperties}>
+            <div className={`${styles.sticker} ${styles.stickerPink} ${styles.floatMed}`}>
+              <span>NO SLEEP</span>
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -12 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              01
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -22 } as React.CSSProperties}>
+            <div className={styles.dottedGrid} />
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -6 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              📷 FRAME
+            </div>
+          </div>
+        </div>
+
+        <div className={`${styles.sideDecorZone} ${styles.sideRight} ${styles.heroBottomSide}`} aria-hidden="true">
+          <div className={styles.parallaxWrapper} style={{ '--depth': -10 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              [🖼️] UPLOAD
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -20 } as React.CSSProperties}>
+            <div className={`${styles.sticker} ${styles.stickerYellow} ${styles.floatSlow}`}>
+              <span>SHIP IT</span>
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -6 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              IDEATE
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -15 } as React.CSSProperties}>
+            <div className={styles.dottedGrid} />
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -12 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              DEPLOY
+            </div>
+          </div>
+        </div>
+
         <div className={styles.centerCol}>
           
           {/* Logo Section */}
@@ -543,7 +926,9 @@ export default function HomePage() {
               <div className={`${styles.heroStatCard} ${styles.statLeft1}`}>
                 <div className={styles.heroStatIcon} style={{ backgroundColor: 'rgba(255, 45, 120, 0.1)', color: 'var(--pink)' }}>📈</div>
                 <div className={styles.heroStatInfo}>
-                  <div className={styles.heroStatNum} style={{ color: 'var(--pink-light)' }}>6800+</div>
+                  <div className={styles.heroStatNum} style={{ color: 'var(--pink-light)' }}>
+                    <AnimatedNumber value="6800" suffix="+" />
+                  </div>
                   <div className={styles.heroStatLabel}>REGISTRATIONS</div>
                 </div>
               </div>
@@ -551,7 +936,9 @@ export default function HomePage() {
               <div className={`${styles.heroStatCard} ${styles.statLeft2}`}>
                 <div className={styles.heroStatIcon} style={{ backgroundColor: 'rgba(253, 245, 224, 0.1)', color: 'var(--cream)' }}>🚀</div>
                 <div className={styles.heroStatInfo}>
-                  <div className={styles.heroStatNum} style={{ color: 'var(--cream)' }}>100+</div>
+                  <div className={styles.heroStatNum} style={{ color: 'var(--cream)' }}>
+                    <AnimatedNumber value="100" suffix="+" />
+                  </div>
                   <div className={styles.heroStatLabel}>SHIPPED PROJECTS</div>
                 </div>
               </div>
@@ -575,7 +962,12 @@ export default function HomePage() {
               </div>
 
               {/* The Badge Card Frame */}
-              <div className={styles.cardFrame}>
+              <div 
+                ref={cardRef} 
+                className={styles.cardFrame}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+              >
                 <div className={styles.cardInner}>
                   {/* ── CARD HEADER ROW ── */}
                   <div className={styles.cardHeaderRow}>
@@ -874,7 +1266,9 @@ export default function HomePage() {
               <div className={`${styles.heroStatCard} ${styles.statRight1}`}>
                 <div className={styles.heroStatIcon} style={{ backgroundColor: 'rgba(245, 200, 0, 0.1)', color: 'var(--yellow)' }}>🔥</div>
                 <div className={styles.heroStatInfo}>
-                  <div className={styles.heroStatNum} style={{ color: 'var(--yellow)' }}>390+</div>
+                  <div className={styles.heroStatNum} style={{ color: 'var(--yellow)' }}>
+                    <AnimatedNumber value="390" suffix="+" />
+                  </div>
                   <div className={styles.heroStatLabel}>SELECTED HACKERS</div>
                 </div>
               </div>
@@ -882,7 +1276,9 @@ export default function HomePage() {
               <div className={`${styles.heroStatCard} ${styles.statRight2}`}>
                 <div className={styles.heroStatIcon} style={{ backgroundColor: 'rgba(29, 107, 53, 0.2)', color: '#2a8a46' }}>💰</div>
                 <div className={styles.heroStatInfo}>
-                  <div className={styles.heroStatNum} style={{ color: '#2a8a46' }}>$50K+</div>
+                  <div className={styles.heroStatNum} style={{ color: '#2a8a46' }}>
+                    <AnimatedNumber value="50" prefix="$" suffix="K+" />
+                  </div>
                   <div className={styles.heroStatLabel}>BOUNTY POOL</div>
                 </div>
               </div>
@@ -891,7 +1287,7 @@ export default function HomePage() {
           </div>
 
           {/* UPLOAD ACTION SECTION (Enlarged, Highlighted Dashboard Card) */}
-          <div className={styles.uploadContainerBox}>
+          <div className={`${styles.uploadContainerBox} ${styles.scrollReveal}`}>
             <div className={styles.uploadBoxHeader}>
               <div className={styles.stepBadge}>STEP 01</div>
               <h2 className={styles.uploadBoxTitle}>UPLOAD OR CAPTURE YOUR IMAGE</h2>
@@ -974,6 +1370,64 @@ export default function HomePage() {
 
       {/* ── SECTION 2: 4 DAYS JOURNEY (Timeline & Wooden desk typing simulator) ── */}
       <section className={styles.journeySection} id="journey">
+        
+        {/* Timeline Side Decorations */}
+        <div className={`${styles.sideDecorZone} ${styles.sideLeft} ${styles.journeySide}`} aria-hidden="true">
+          <div className={styles.parallaxWrapper} style={{ '--depth': -6 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              🚀 DAY 01
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -16 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              🔥 DAY 02
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -22 } as React.CSSProperties}>
+            <div className={styles.techLineWrapper}>
+              <span className={styles.pulsingDot}>★</span>
+              <span className={styles.techLine} />
+              <span className={styles.pulsingDot}>⚡</span>
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -10 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              → GOA 2026
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -12 } as React.CSSProperties}>
+            <div className={`${styles.sticker} ${styles.stickerPink} ${styles.floatSlow}`}>
+              <span>NO SLEEP</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`${styles.sideDecorZone} ${styles.sideRight} ${styles.journeySide}`} aria-hidden="true">
+          <div className={styles.parallaxWrapper} style={{ '--depth': -8 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              💻 DAY 03
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -14 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              🏆 DAY 04
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -20 } as React.CSSProperties}>
+            <div className={styles.dottedGrid} />
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -10 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              ★ BEACH VIBES
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -12 } as React.CSSProperties}>
+            <div className={`${styles.sticker} ${styles.stickerYellow} ${styles.floatMed}`}>
+              <span>SHIP IT</span>
+            </div>
+          </div>
+        </div>
+
         <div className={styles.sectionContainer}>
           
           <div className={styles.journeyHeader}>
@@ -983,7 +1437,7 @@ export default function HomePage() {
           </div>
 
           {/* Bamboo Roof Hanging Day Cards */}
-          <div className={styles.bambooStructure}>
+          <div className={`${styles.bambooStructure} ${styles.scrollReveal}`}>
             <div className={styles.bambooPole} />
             
             <div className={styles.hangingFramesGrid}>
@@ -1032,7 +1486,7 @@ export default function HomePage() {
           </div>
 
           {/* Wooden Studio Desk Scene */}
-          <div className={styles.studioDeskScene}>
+          <div className={`${styles.studioDeskScene} ${styles.scrollReveal}`}>
             
             {/* The Wooden Desk Surface */}
             <div className={styles.deskSurface}>
@@ -1064,13 +1518,13 @@ export default function HomePage() {
                       <span className={styles.terminalTitle}>hacker-house-terminal.sh</span>
                     </div>
                     <div className={styles.terminalBody}>
-                      {terminalLines.map((line, idx) => (
+                      {historyLines.map((line, idx) => (
                         <div key={idx} className={styles.terminalLine}>
                           {line}
                         </div>
                       ))}
                       <div className={styles.terminalCursorLine}>
-                        <span>&gt; </span>
+                        <span>{currentLine}</span>
                         <span className={styles.blinkingCursor}>█</span>
                       </div>
                     </div>
@@ -1084,20 +1538,20 @@ export default function HomePage() {
                     <div className={styles.keyRow} />
                     <div className={styles.trackpad} />
                   </div>
-                </div>
 
-                {/* Typing Hands overlay */}
-                <div className={styles.handsOverlay}>
-                  <svg viewBox="0 0 200 100" className={styles.typingHandsSvg}>
-                    {/* Left hand */}
-                    <g className={styles.handLeft}>
-                      <path d="M 30,95 C 40,80 50,65 52,50 C 53,42 45,35 48,25 C 50,20 56,22 55,28 C 54,34 56,40 59,45 M 59,45 C 62,38 58,25 61,16 C 63,12 68,14 67,20 C 66,28 66,35 69,45 M 69,45 C 72,36 71,24 74,15 C 76,11 81,13 80,20 C 79,28 78,35 79,45 M 79,45 C 83,38 85,28 89,20 C 91,16 96,18 94,25 C 92,32 89,40 88,50 M 88,50 C 92,52 95,45 100,42 C 103,40 107,46 103,50 C 95,60 85,75 75,95 Z" fill="#d89680" stroke="#0e3d1f" strokeWidth="2.5" strokeLinejoin="round" />
-                    </g>
-                    {/* Right hand */}
-                    <g className={styles.handRight}>
-                      <path d="M 170,95 C 160,80 150,65 148,50 C 147,42 155,35 152,25 C 150,20 144,22 145,28 C 146,34 144,40 141,45 M 141,45 C 138,38 142,25 139,16 C 137,12 132,14 133,20 C 134,28 134,35 131,45 M 131,45 C 128,36 129,24 126,15 C 124,11 119,13 120,20 C 121,28 122,35 121,45 M 121,45 C 117,38 115,28 111,20 C 109,16 104,18 106,25 C 108,32 111,40 112,50 M 112,50 C 108,52 105,45 100,42 C 97,40 93,46 97,50 C 105,60 115,75 125,95 Z" fill="#d89680" stroke="#0e3d1f" strokeWidth="2.5" strokeLinejoin="round" />
-                    </g>
-                  </svg>
+                  {/* Typing Hands overlay nested inside laptop base */}
+                  <div className={styles.handsOverlay}>
+                    <svg viewBox="0 0 200 100" className={styles.typingHandsSvg}>
+                      {/* Left hand */}
+                      <g className={styles.handLeft}>
+                        <path d="M 30,95 C 40,80 50,65 52,50 C 53,42 45,35 48,25 C 50,20 56,22 55,28 C 54,34 56,40 59,45 M 59,45 C 62,38 58,25 61,16 C 63,12 68,14 67,20 C 66,28 66,35 69,45 M 69,45 C 72,36 71,24 74,15 C 76,11 81,13 80,20 C 79,28 78,35 79,45 M 79,45 C 83,38 85,28 89,20 C 91,16 96,18 94,25 C 92,32 89,40 88,50 M 88,50 C 92,52 95,45 100,42 C 103,40 107,46 103,50 C 95,60 85,75 75,95 Z" fill="#d89680" stroke="#0e3d1f" strokeWidth="2.5" strokeLinejoin="round" />
+                      </g>
+                      {/* Right hand */}
+                      <g className={styles.handRight}>
+                        <path d="M 170,95 C 160,80 150,65 148,50 C 147,42 155,35 152,25 C 150,20 144,22 145,28 C 146,34 144,40 141,45 M 141,45 C 138,38 142,25 139,16 C 137,12 132,14 133,20 C 134,28 134,35 131,45 M 131,45 C 128,36 129,24 126,15 C 124,11 119,13 120,20 C 121,28 122,35 121,45 M 121,45 C 117,38 115,28 111,20 C 109,16 104,18 106,25 C 108,32 111,40 112,50 M 112,50 C 108,52 105,45 100,42 C 97,40 93,46 97,50 C 105,60 115,75 125,95 Z" fill="#d89680" stroke="#0e3d1f" strokeWidth="2.5" strokeLinejoin="round" />
+                      </g>
+                    </svg>
+                  </div>
                 </div>
 
               </div>
@@ -1120,7 +1574,43 @@ export default function HomePage() {
       </section>
 
       {/* ── RICH MULTI-COLUMN TROPICAL FOOTER ── */}
-      <footer className={styles.footerSection}>
+      <footer className={`${styles.footerSection} ${styles.scrollReveal}`}>
+        
+        {/* Footer Side Decorations */}
+        <div className={`${styles.sideDecorZone} ${styles.sideLeft} ${styles.footerSide}`} aria-hidden="true">
+          <div className={styles.parallaxWrapper} style={{ '--depth': -5 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              📍 Morjim Beach
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -12 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              15.6062° N, 73.7364° E
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -20 } as React.CSSProperties}>
+            <div className={styles.dottedGrid} />
+          </div>
+        </div>
+
+        <div className={`${styles.sideDecorZone} ${styles.sideRight} ${styles.footerSide}`} aria-hidden="true">
+          <div className={styles.parallaxWrapper} style={{ '--depth': -6 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              🌴 GOA 2026
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -15 } as React.CSSProperties}>
+            <div className={styles.signalText}>
+              ★ 24/7 BUILD
+            </div>
+          </div>
+          <div className={styles.parallaxWrapper} style={{ '--depth': -10 } as React.CSSProperties}>
+            <div className={`${styles.sticker} ${styles.stickerYellow} ${styles.floatSlow}`}>
+              <span>GOA</span>
+            </div>
+          </div>
+        </div>
+
         <div className={styles.footerContainer}>
           {/* Column 1: Brand details & Socials */}
           <div className={styles.footerColBrand}>
@@ -1215,6 +1705,34 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Building transition overlay */}
+      {isBuilding && (
+        <div className={styles.buildingOverlay}>
+          {/* Floating themed particles */}
+          {['🌴', '🌺', '⚡', '💻', '🍍', '🔥', '🌴', '🌺', '⚡', '💻'].map((emoji, idx) => (
+            <div
+              key={idx}
+              className={styles.buildingParticle}
+              style={{
+                left: `${(idx * 11) % 90 + 5}%`,
+                animationDelay: `${idx * 0.15}s`,
+                animationDuration: `${2.5 + (idx % 2)}s`,
+              }}
+            >
+              {emoji}
+            </div>
+          ))}
+
+          <div className={styles.buildingTitle}>BUILDING YOUR IDENTITY</div>
+          <div className={styles.buildingScanner}>
+            <div className={styles.buildingScannerBar} />
+          </div>
+          <div className={styles.buildingStatus}>
+            {buildingStep}
+          </div>
+        </div>
+      )}
 
     </main>
   );

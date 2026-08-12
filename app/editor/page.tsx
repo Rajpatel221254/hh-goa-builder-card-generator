@@ -45,6 +45,7 @@ export default function EditorPage() {
   /* ── Transform state (refs for live perf, state for slider sync) ── */
   const posRef = useRef({ x: 0, y: 0 });
   const scaleRef = useRef(1);
+  const [scale, setScale] = useState(1);
   const [sliderScale, setSliderScale] = useState(1); // 0→1 normalized
 
   /* ── Crop frame size (computed from container) ── */
@@ -52,6 +53,9 @@ export default function EditorPage() {
 
   /* ── baseScale: scale at which image just covers the crop frame ── */
   const baseScaleRef = useRef(1);
+  const [baseScale, setBaseScale] = useState(1);
+
+  const [isDraggingState, setIsDraggingState] = useState(false);
 
   /* ── Drag / pinch refs ── */
   const drag = useRef({
@@ -67,8 +71,17 @@ export default function EditorPage() {
   useEffect(() => {
     const stored = sessionStorage.getItem('hh_photo_src');
     if (!stored) { router.replace('/'); return; }
-    setSrc(stored);
+    setTimeout(() => {
+      setSrc(stored);
+    }, 0);
   }, [router]);
+
+  /* ── Apply CSS transform to img (no state, direct DOM for perf) ── */
+  const applyTransform = useCallback((x: number, y: number, s: number) => {
+    if (!photoRef.current) return;
+    photoRef.current.style.transform =
+      `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${s * baseScaleRef.current})`;
+  }, []);
 
   /* ── Compute crop size & baseScale when image loads or container resizes ── */
   const recalcLayout = useCallback(() => {
@@ -97,13 +110,15 @@ export default function EditorPage() {
     // baseScale: image covers crop frame (object-fit: cover equivalent)
     const bs = Math.max(cfw / imgNatW, cfh / imgNatH);
     baseScaleRef.current = bs;
+    setBaseScale(bs);
 
     // Reset position & scale
     posRef.current = { x: 0, y: 0 };
     scaleRef.current = 1;
+    setScale(1);
     setSliderScale(0.25); // default 25% into the range
     applyTransform(0, 0, 1);
-  }, [imgNatW, imgNatH]);
+  }, [imgNatW, imgNatH, applyTransform]);
 
   /* ResizeObserver on container */
   useLayoutEffect(() => {
@@ -113,13 +128,6 @@ export default function EditorPage() {
     ro.observe(el);
     return () => ro.disconnect();
   }, [recalcLayout]);
-
-  /* ── Apply CSS transform to img (no state, direct DOM for perf) ── */
-  const applyTransform = useCallback((x: number, y: number, s: number) => {
-    if (!photoRef.current) return;
-    photoRef.current.style.transform =
-      `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${s * baseScaleRef.current})`;
-  }, []);
 
   /* ── Constrain pan so photo always covers crop frame ── */
   const constrain = useCallback(
@@ -146,6 +154,7 @@ export default function EditorPage() {
     (norm: number) => {
       const s = MIN_SCALE + norm * (MAX_SCALE - MIN_SCALE);
       scaleRef.current = s;
+      setScale(s);
       const { x, y } = constrain(posRef.current.x, posRef.current.y, s);
       posRef.current = { x, y };
       applyTransform(x, y, s);
@@ -174,6 +183,7 @@ export default function EditorPage() {
       originX: posRef.current.x,
       originY: posRef.current.y,
     };
+    setIsDraggingState(true);
   }, []);
 
   const onMouseMove = useCallback(
@@ -194,6 +204,7 @@ export default function EditorPage() {
 
   const onMouseUp = useCallback(() => {
     drag.current.active = false;
+    setIsDraggingState(false);
   }, []);
 
   /* ── TOUCH drag & pinch ── */
@@ -207,6 +218,7 @@ export default function EditorPage() {
         originY: posRef.current.y,
       };
       pinch.current.active = false;
+      setIsDraggingState(true);
     } else if (e.touches.length === 2) {
       drag.current.active = false;
       pinch.current = {
@@ -214,6 +226,7 @@ export default function EditorPage() {
         lastDist: getTouchDist(e.touches[0], e.touches[1]),
         lastScale: scaleRef.current,
       };
+      setIsDraggingState(true);
     }
   }, []);
 
@@ -228,6 +241,7 @@ export default function EditorPage() {
           MAX_SCALE
         );
         scaleRef.current = newS;
+        setScale(newS);
         const { x, y } = constrain(posRef.current.x, posRef.current.y, newS);
         posRef.current = { x, y };
         applyTransform(x, y, newS);
@@ -251,12 +265,14 @@ export default function EditorPage() {
   const onTouchEnd = useCallback(() => {
     drag.current.active = false;
     pinch.current.active = false;
+    setIsDraggingState(false);
   }, []);
 
   /* ── RESET ── */
   const handleReset = useCallback(() => {
     posRef.current = { x: 0, y: 0 };
     scaleRef.current = 1;
+    setScale(1);
     setSliderScale(0.25);
     applyTransform(0, 0, 1);
   }, [applyTransform]);
@@ -341,7 +357,7 @@ export default function EditorPage() {
     );
   }
 
-  const scaleDisplay = (scaleRef.current * baseScaleRef.current * 100).toFixed(0);
+  const scaleDisplay = (scale * baseScale * 100).toFixed(0);
 
   return (
     <main className={styles.main} id="editor-main">
@@ -392,7 +408,7 @@ export default function EditorPage() {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        style={{ cursor: drag.current.active ? 'grabbing' : 'grab' }}
+        style={{ cursor: isDraggingState ? 'grabbing' : 'grab' }}
       >
         {/* Photo (draggable) */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
