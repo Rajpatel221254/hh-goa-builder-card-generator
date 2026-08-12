@@ -52,6 +52,14 @@ export default function CardExportPage() {
   const cardRef = useRef<HTMLDivElement>(null);
 
   const [photoSrc, setPhotoSrc] = useState<string>('');
+  const [passType, setPassType] = useState<'solo' | 'team'>('solo');
+  const [teamMemberCount, setTeamMemberCount] = useState<number>(2);
+  const [teamMembers, setTeamMembers] = useState([
+    { name: '', photo: '' },
+    { name: '', photo: '' },
+    { name: '', photo: '' },
+  ]);
+
   const [formData, setFormData] = useState<BuilderData>({
     name: 'BUILDER',
     role: 'HACKER',
@@ -80,36 +88,49 @@ export default function CardExportPage() {
     const cropped = sessionStorage.getItem('hh_cropped_photo');
     const raw = sessionStorage.getItem('hh_photo_src');
     if (cropped) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhotoSrc(cropped);
     } else if (raw) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhotoSrc(raw);
     }
 
     const savedFormat = sessionStorage.getItem('hh_active_format') as 'card' | 'pfp' | null;
     if (savedFormat) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveFormat(savedFormat);
     }
 
     const savedPfpStyle = sessionStorage.getItem('hh_pfp_style') as 'badge' | 'polaroid' | 'cyber' | null;
     if (savedPfpStyle) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPfpStyle(savedPfpStyle);
     }
 
     const savedTheme = sessionStorage.getItem('hh_card_theme') as 'emerald' | 'sunset' | 'ocean' | 'obsidian' | null;
     if (savedTheme) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCardTheme(savedTheme);
+    }
+
+    const savedPassType = sessionStorage.getItem('hh_pass_type') as 'solo' | 'team' | null;
+    if (savedPassType) {
+      setPassType(savedPassType);
+    }
+
+    const savedMemberCount = sessionStorage.getItem('hh_team_member_count');
+    if (savedMemberCount) {
+      setTeamMemberCount(parseInt(savedMemberCount, 10));
+    }
+
+    const savedTeamMembers = sessionStorage.getItem('hh_team_members');
+    if (savedTeamMembers) {
+      try {
+        setTeamMembers(JSON.parse(savedTeamMembers));
+      } catch {
+        // ignore
+      }
     }
 
     const savedData = sessionStorage.getItem('hh_builder_data');
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData((prev) => ({
           ...prev,
           ...parsed,
@@ -120,12 +141,151 @@ export default function CardExportPage() {
     }
   }, []);
 
+  const renderPhotoOrCollage = (isPfp = false) => {
+    if (passType === 'solo') {
+      return photoSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photoSrc} alt={formData.name || 'Builder Photo'} className={isPfp ? styles.pfpUserPhoto : styles.userPhoto} />
+      ) : (
+        <div className={styles.photoPlaceholder}>
+          <span className={styles.placeholderIcon}>👤</span>
+          <span className={styles.placeholderText}>NO PHOTO</span>
+        </div>
+      );
+    } else {
+      if (isPfp) {
+        if (teamMemberCount === 2) {
+          return (
+            <div className={styles.pfpTeamAvatars2}>
+              {teamMembers.slice(0, 2).map((member, idx) => (
+                <div key={idx} className={styles.pfpTeamAvatarBox2}>
+                  <div className={styles.pfpTeamAvatarCircle}>
+                    {member.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={member.photo} alt={member.name || `Member ${idx + 1}`} className={styles.pfpTeamAvatarImg} />
+                    ) : (
+                      <span className={styles.pfpAvatarPlaceholderIcon}>👤</span>
+                    )}
+                  </div>
+                  <span className={styles.pfpTeamAvatarName}>
+                    {member.name ? member.name.toUpperCase() : `MEMBER ${idx + 1}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        } else {
+          return (
+            <div className={styles.pfpTeamAvatars3}>
+              {teamMembers.slice(0, 3).map((member, idx) => (
+                <div key={idx} className={`${styles.pfpTeamAvatarBox3} ${styles[`pfpTeamAvatarPos${idx}`]}`}>
+                  <div className={styles.pfpTeamAvatarCircle}>
+                    {member.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={member.photo} alt={member.name || `Member ${idx + 1}`} className={styles.pfpTeamAvatarImg} />
+                    ) : (
+                      <span className={styles.pfpAvatarPlaceholderIcon}>👤</span>
+                    )}
+                  </div>
+                  <span className={styles.pfpTeamAvatarName}>
+                    {member.name ? member.name.toUpperCase() : `MEMBER ${idx + 1}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        }
+      } else {
+        if (teamMemberCount === 2) {
+          return (
+            <div className={styles.pfpTeamCollage2}>
+              <div className={styles.pfpTeamSlice}>
+                {teamMembers[0]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[0].photo} alt={teamMembers[0].name || 'Member 1'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>MEMBER 1</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.pfpTeamSlice}>
+                {teamMembers[1]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[1].photo} alt={teamMembers[1].name || 'Member 2'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>MEMBER 2</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        } else {
+          return (
+            <div className={styles.pfpTeamCollage3}>
+              <div className={styles.pfpTeamSliceMain}>
+                {teamMembers[0]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[0].photo} alt={teamMembers[0].name || 'Member 1'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>M1</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.pfpTeamSliceSub}>
+                {teamMembers[1]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[1].photo} alt={teamMembers[1].name || 'Member 2'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>M2</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.pfpTeamSliceSub}>
+                {teamMembers[2]?.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={teamMembers[2].photo} alt={teamMembers[2].name || 'Member 3'} className={styles.userPhoto} />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    <span className={styles.placeholderIcon}>👤</span>
+                    <span className={styles.placeholderText}>M3</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+      }
+    }
+  };
+
   // Internal helper to render & trigger PNG download, copy to clipboard, and return file
   const generateAndDownloadCard = async (customMessage?: string): Promise<{ dataUrl: string; blob: Blob; file: File } | null> => {
     if (!cardRef.current) return null;
 
     try {
       setIsDownloading(true);
+
+      // Await all custom fonts to be fully loaded and parsed
+      if (typeof document !== 'undefined' && 'fonts' in document) {
+        await document.fonts.ready;
+      }
+
+      // Await all images inside card container to be fully loaded and decoded
+      const images = cardRef.current.querySelectorAll('img');
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve();
+          return img.decode().catch(() => {});
+        })
+      );
 
       // Render high-res PNG at 3x resolution
       const dataUrl = await toPng(cardRef.current, {
@@ -185,9 +345,7 @@ export default function CardExportPage() {
 
   // Share to X intent (Downloads HD PNG + Copies to clipboard + Opens X intent)
   const handleShareToX = async () => {
-    const builderTitle = formData.builderTitle || 'The Code Architect';
-    const formatName = activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card';
-    const text = `Just generated my official HH Goa 2026 ${formatName} as "${builderTitle}"! 🌴🚀\n\nSee you in Goa! 🏖️\n\n#FrameInGoa #HHGoa2026 @HackerHouseGoa`;
+    const text = `Built my HH Goa 2026 identity. See you in Goa! 🌴🚀\n\n#FrameInGoa @HackerHouseGoa`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
 
     // Pre-open window synchronously to prevent popup blocker
@@ -346,18 +504,32 @@ export default function CardExportPage() {
         {/* Left Column: The Completed Graphic to Export */}
         <section className={styles.cardSection}>
 
-          {/* ── Format Selector Toggle Bar ── */}
-          <div className={styles.formatToggleBar}>
+          {/* ── Pass Type Selector Toggle Bar ── */}
+          <div className={styles.passTypeToggleBar}>
             <button
               type="button"
-              className={`${styles.formatToggleBtn} ${activeFormat === 'card' ? styles.formatToggleActive : ''}`}
+              className={`${styles.passTypeToggleBtn} ${passType === 'solo' ? styles.passTypeActive : ''}`}
               onClick={() => {
-                setActiveFormat('card');
-                sessionStorage.setItem('hh_active_format', 'card');
+                setPassType('solo');
+                sessionStorage.setItem('hh_pass_type', 'solo');
               }}
             >
-              💳 Format B: Builder Card (Main)
+              👤 Solo Pass
             </button>
+            <button
+              type="button"
+              className={`${styles.passTypeToggleBtn} ${passType === 'team' ? styles.passTypeActive : ''}`}
+              onClick={() => {
+                setPassType('team');
+                sessionStorage.setItem('hh_pass_type', 'team');
+              }}
+            >
+              👥 Team Pass
+            </button>
+          </div>
+
+          {/* ── Format Selector Toggle Bar ── */}
+          <div className={styles.formatToggleBar}>
             <button
               type="button"
               className={`${styles.formatToggleBtn} ${activeFormat === 'pfp' ? styles.formatToggleActive : ''}`}
@@ -367,6 +539,16 @@ export default function CardExportPage() {
               }}
             >
               🖼️ Format A: PFP Frame
+            </button>
+            <button
+              type="button"
+              className={`${styles.formatToggleBtn} ${activeFormat === 'card' ? styles.formatToggleActive : ''}`}
+              onClick={() => {
+                setActiveFormat('card');
+                sessionStorage.setItem('hh_active_format', 'card');
+              }}
+            >
+              💳 Format B: Builder Card (Main)
             </button>
           </div>
 
@@ -449,15 +631,7 @@ export default function CardExportPage() {
                     <span>★ HACKER 🌴 BUILDER ★</span>
                   </div>
                   <div className={styles.pfpPolaroidInner}>
-                    {photoSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoSrc} alt={formData.name || 'Polaroid Avatar'} className={styles.pfpUserPhoto} />
-                    ) : (
-                      <div className={styles.photoPlaceholder}>
-                        <span className={styles.placeholderIcon}>👤</span>
-                        <span className={styles.placeholderText}>NO PHOTO</span>
-                      </div>
-                    )}
+                    {renderPhotoOrCollage(true)}
                   </div>
                   <div className={styles.pfpPolaroidFooter}>
                     <div className={styles.pfpPolaroidInfo}>
@@ -482,35 +656,19 @@ export default function CardExportPage() {
                     HH_GOA_2026 // MORJIM
                   </div>
                   <div className={styles.pfpCyberInner}>
-                    {photoSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoSrc} alt={formData.name || 'Cyber Avatar'} className={styles.pfpUserPhoto} />
-                    ) : (
-                      <div className={styles.photoPlaceholder}>
-                        <span className={styles.placeholderIcon}>👤</span>
-                        <span className={styles.placeholderText}>NO PHOTO</span>
-                      </div>
-                    )}
+                    {renderPhotoOrCollage(true)}
                   </div>
                   <div className={styles.pfpCyberFooter}>
                     <span className={styles.pfpCyberDot} />
-                    <span>{formData.name ? formData.name.toUpperCase() : 'ACTIVE BUILDER'} // {formData.builderTitle || 'SHIPPING'}</span>
+                    <span>{formData.name ? formData.name.toUpperCase() : 'ACTIVE BUILDER'}{" // "}{formData.builderTitle || 'SHIPPING'}</span>
                   </div>
                 </div>
               ) : (
                 /* Variant 1: Circular Avatar Seal */
                 <div className={`${styles.pfpFrameOuter} ${cardTheme === 'sunset' ? styles.themeCyberSunset : cardTheme === 'ocean' ? styles.themeArabianWave : cardTheme === 'obsidian' ? styles.themeObsidianGold : styles.themeEmerald}`}>
                   <div className={styles.pfpFrameInner}>
-                    {photoSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoSrc} alt={formData.name || 'PFP Avatar'} className={styles.pfpUserPhoto} />
-                    ) : (
-                      <div className={styles.photoPlaceholder}>
-                        <span className={styles.placeholderIcon}>👤</span>
-                        <span className={styles.placeholderText}>NO PHOTO</span>
-                      </div>
-                    )}
-
+                    {renderPhotoOrCollage(true)}
+                    
                     {/* Tropical Border Graphic Overlay */}
                     <div className={styles.pfpOverlayGraphic}>
                       <div className={styles.pfpTopBadge}>
@@ -522,7 +680,7 @@ export default function CardExportPage() {
                           <span>🌴</span>
                         </div>
                         {formData.name && (
-                          <span className={styles.pfpNameTag}>{formData.name.toUpperCase()}</span>
+                           <span className={styles.pfpNameTag}>{formData.name.toUpperCase()}</span>
                         )}
                       </div>
                     </div>
@@ -656,39 +814,76 @@ export default function CardExportPage() {
                 </div>
 
                 {/* ── CARD MIDDLE GRID: PHOTO + DETAILS ── */}
-                <div className={styles.cardMainGrid}>
+                <div className={passType === 'team' ? `${styles.cardMainGrid} ${styles.teamMainGrid}` : styles.cardMainGrid}>
                   {/* Left Column: Photo & Builder Title */}
-                  <div className={styles.photoCol}>
-                    <div className={styles.photoFrameOuter}>
-                      <div className={styles.photoFrameInner}>
-                        {photoSrc ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={photoSrc} alt={formData.name || 'Builder Photo'} className={styles.userPhoto} />
-                        ) : (
-                          <div className={styles.photoPlaceholder}>
-                            <span className={styles.placeholderIcon}>👤</span>
-                            <span className={styles.placeholderText}>BUILDER</span>
+                  {passType === 'solo' ? (
+                    <div className={styles.photoCol}>
+                      <div className={styles.photoFrameOuter}>
+                        <div className={styles.photoFrameInner}>
+                          {photoSrc ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={photoSrc} alt={formData.name || 'Builder Photo'} className={styles.userPhoto} />
+                          ) : (
+                            <div className={styles.photoPlaceholder}>
+                              <span className={styles.placeholderIcon}>👤</span>
+                              <span className={styles.placeholderText}>BUILDER</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Hacker Builder Circular Seal */}
+                        <div className={styles.hackerSeal}>
+                          <span className={styles.sealTop}>HACKER</span>
+                          <span className={styles.sealPalm}>🌴</span>
+                          <span className={styles.sealBottom}>BUILDER</span>
+                        </div>
+                      </div>
+
+                      {/* Builder Title Box */}
+                      <div className={styles.builderTitleBox}>
+                        <span className={styles.builderTitleBadge}>BUILDER TITLE</span>
+                        <div className={styles.builderTitleText}>
+                          <span>{formData.builderTitle ? formData.builderTitle.toUpperCase() : 'THE CODE ARCHITECT'}</span>
+                          <span className={styles.titlePalm}>🌴</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.photoCol}>
+                      <div className={styles.teamMembersRow}>
+                        {teamMembers.slice(0, teamMemberCount).map((member, idx) => (
+                          <div key={idx} className={styles.teamMemberBox}>
+                            <div className={styles.teamPhotoFrameOuter}>
+                              <div className={styles.teamPhotoFrameInner}>
+                                {member.photo ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={member.photo} alt={member.name || `Member ${idx + 1}`} className={styles.userPhoto} />
+                                ) : (
+                                  <div className={styles.photoPlaceholder}>
+                                    <span className={styles.placeholderIcon}>👤</span>
+                                    <span className={styles.placeholderText}>MEMBER {idx + 1}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className={styles.teamMemberSeal}>🌴</div>
+                            </div>
+                            <div className={styles.teamMemberName}>
+                              {member.name ? member.name.toUpperCase() : `MEMBER ${idx + 1}`}
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
 
-                      {/* Hacker Builder Circular Seal */}
-                      <div className={styles.hackerSeal}>
-                        <span className={styles.sealTop}>HACKER</span>
-                        <span className={styles.sealPalm}>🌴</span>
-                        <span className={styles.sealBottom}>BUILDER</span>
+                      {/* Builder Title Box */}
+                      <div className={styles.builderTitleBox}>
+                        <span className={styles.builderTitleBadge}>TEAM TITLE</span>
+                        <div className={styles.builderTitleText}>
+                          <span>{formData.builderTitle ? formData.builderTitle.toUpperCase() : 'THE CODE ARCHITECT'}</span>
+                          <span className={styles.titlePalm}>🌴</span>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Builder Title Box */}
-                    <div className={styles.builderTitleBox}>
-                      <span className={styles.builderTitleBadge}>BUILDER TITLE</span>
-                      <div className={styles.builderTitleText}>
-                        <span>{formData.builderTitle ? formData.builderTitle.toUpperCase() : 'THE CODE ARCHITECT'}</span>
-                        <span className={styles.titlePalm}>🌴</span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Right Column: Name & Details List */}
                   <div className={styles.infoCol}>
@@ -696,16 +891,22 @@ export default function CardExportPage() {
                     <div className={styles.nameRow}>
                       <span className={styles.nameSparkle}>✦</span>
                       <h2 className={styles.cardName}>
-                        {formData.name ? formData.name.toUpperCase() : 'BUILDER NAME'}
+                        {formData.name ? formData.name.toUpperCase() : (passType === 'team' ? 'TEAM NAME' : 'BUILDER NAME')}
                       </h2>
                       <span className={styles.nameSparkle}>✦</span>
                     </div>
 
                     {/* Role / Subtitle */}
-                    {formData.role && (
+                    {formData.role ? (
                       <div className={styles.cardRole}>
                         {formData.role.toUpperCase()}
                       </div>
+                    ) : (
+                      passType === 'team' && (
+                        <div className={styles.cardRole}>
+                          TEAM OF BUILDERS
+                        </div>
+                      )
                     )}
 
                     {/* Detail Rows */}
