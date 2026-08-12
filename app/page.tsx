@@ -472,6 +472,20 @@ export default function HomePage() {
     }, 600);
   }, [router]);
 
+  const handleScrollTo = useCallback((e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    if (id === 'top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const el = document.getElementById(id);
+      if (el) {
+        const navHeight = 70;
+        const y = el.getBoundingClientRect().top + window.pageYOffset - navHeight;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }
+  }, []);
+
   return (
     <main className={styles.main} id="main-content">
       {/* Hidden file input */}
@@ -670,13 +684,13 @@ export default function HomePage() {
         </div>
 
         <nav className={styles.headerNavLinks}>
-          <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={styles.navLink}>
+          <a href="#" onClick={(e) => handleScrollTo(e, 'top')} className={styles.navLink}>
             BUILDER CARD
           </a>
-          <a href="#hype-meter" className={styles.navLink}>
+          <a href="#hype-meter" onClick={(e) => handleScrollTo(e, 'hype-meter')} className={styles.navLink}>
             THE HYPE
           </a>
-          <a href="#journey" className={styles.navLink}>
+          <a href="#journey" onClick={(e) => handleScrollTo(e, 'journey')} className={styles.navLink}>
             TIMELINE
           </a>
         </nav>
@@ -1674,12 +1688,12 @@ export default function HomePage() {
             <h4 className={styles.footerColTitle}>NAVIGATION</h4>
             <ul className={styles.footerLinksList}>
               <li>
-                <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                <a href="#" onClick={(e) => handleScrollTo(e, 'top')}>
                   Card Generator
                 </a>
               </li>
-              <li><a href="#hype-meter">The Hype Stats</a></li>
-              <li><a href="#journey">4-Day Journey</a></li>
+              <li><a href="#hype-meter" onClick={(e) => handleScrollTo(e, 'hype-meter')}>The Hype Stats</a></li>
+              <li><a href="#journey" onClick={(e) => handleScrollTo(e, 'journey')}>4-Day Journey</a></li>
               <li><a href="/editor">Photo Cropper</a></li>
             </ul>
           </div>
