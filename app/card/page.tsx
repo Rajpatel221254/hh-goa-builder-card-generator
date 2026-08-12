@@ -69,6 +69,8 @@ export default function CardExportPage() {
   });
 
   const [activeFormat, setActiveFormat] = useState<'card' | 'pfp'>('card');
+  const [pfpStyle, setPfpStyle] = useState<'badge' | 'polaroid' | 'cyber'>('badge');
+  const [cardTheme, setCardTheme] = useState<'emerald' | 'sunset' | 'ocean' | 'obsidian'>('emerald');
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [toastMessage, setToastMessage] = useState('Card Downloaded Successfully!');
@@ -83,6 +85,24 @@ export default function CardExportPage() {
     } else if (raw) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhotoSrc(raw);
+    }
+
+    const savedFormat = sessionStorage.getItem('hh_active_format') as 'card' | 'pfp' | null;
+    if (savedFormat) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveFormat(savedFormat);
+    }
+
+    const savedPfpStyle = sessionStorage.getItem('hh_pfp_style') as 'badge' | 'polaroid' | 'cyber' | null;
+    if (savedPfpStyle) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPfpStyle(savedPfpStyle);
+    }
+
+    const savedTheme = sessionStorage.getItem('hh_card_theme') as 'emerald' | 'sunset' | 'ocean' | 'obsidian' | null;
+    if (savedTheme) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCardTheme(savedTheme);
     }
 
     const savedData = sessionStorage.getItem('hh_builder_data');
@@ -331,48 +351,186 @@ export default function CardExportPage() {
             <button
               type="button"
               className={`${styles.formatToggleBtn} ${activeFormat === 'card' ? styles.formatToggleActive : ''}`}
-              onClick={() => setActiveFormat('card')}
+              onClick={() => {
+                setActiveFormat('card');
+                sessionStorage.setItem('hh_active_format', 'card');
+              }}
             >
-              💳 Format B: Builder Card
+              💳 Format B: Builder Card (Main)
             </button>
             <button
               type="button"
               className={`${styles.formatToggleBtn} ${activeFormat === 'pfp' ? styles.formatToggleActive : ''}`}
-              onClick={() => setActiveFormat('pfp')}
+              onClick={() => {
+                setActiveFormat('pfp');
+                sessionStorage.setItem('hh_active_format', 'pfp');
+              }}
             >
               🖼️ Format A: PFP Frame
             </button>
           </div>
 
+          {/* ── PFP Frame Style Sub-selector (Visible when Format A is active) ── */}
+          {activeFormat === 'pfp' && (
+            <div className={styles.themeSelectorBar} style={{ marginBottom: '0.65rem' }}>
+              <span className={styles.themeSelectorLabel}>🖼️ SELECT PFP FRAME VARIANT:</span>
+              <div className={styles.variantPillsRow}>
+                <button
+                  type="button"
+                  className={`${styles.themePill} ${pfpStyle === 'badge' ? styles.themePillActive : ''}`}
+                  onClick={() => { setPfpStyle('badge'); sessionStorage.setItem('hh_pfp_style', 'badge'); }}
+                >
+                  <span>✨ Circular Seal</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.themePill} ${pfpStyle === 'polaroid' ? styles.themePillActive : ''}`}
+                  onClick={() => { setPfpStyle('polaroid'); sessionStorage.setItem('hh_pfp_style', 'polaroid'); }}
+                >
+                  <span>📸 Polaroid Frame</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.themePill} ${pfpStyle === 'cyber' ? styles.themePillActive : ''}`}
+                  onClick={() => { setPfpStyle('cyber'); sessionStorage.setItem('hh_pfp_style', 'cyber'); }}
+                >
+                  <span>⚡ Cyber Shield</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Interactive Frame Theme Selector ── */}
+          <div className={styles.themeSelectorBar}>
+            <span className={styles.themeSelectorLabel}>🎨 SELECT COLOR THEME:</span>
+            <div className={styles.themePillsRow}>
+              <button
+                type="button"
+                className={`${styles.themePill} ${cardTheme === 'emerald' ? styles.themePillActive : ''}`}
+                onClick={() => { setCardTheme('emerald'); sessionStorage.setItem('hh_card_theme', 'emerald'); }}
+              >
+                <span className={styles.themeDot} style={{ background: '#2a8a46' }} />
+                <span>Goan Emerald</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.themePill} ${cardTheme === 'sunset' ? styles.themePillActive : ''}`}
+                onClick={() => { setCardTheme('sunset'); sessionStorage.setItem('hh_card_theme', 'sunset'); }}
+              >
+                <span className={styles.themeDot} style={{ background: 'linear-gradient(135deg, #ff2d78, #ff7b00)' }} />
+                <span>Cyber Sunset</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.themePill} ${cardTheme === 'ocean' ? styles.themePillActive : ''}`}
+                onClick={() => { setCardTheme('ocean'); sessionStorage.setItem('hh_card_theme', 'ocean'); }}
+              >
+                <span className={styles.themeDot} style={{ background: 'linear-gradient(135deg, #00f0ff, #0077b6)' }} />
+                <span>Arabian Wave</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.themePill} ${cardTheme === 'obsidian' ? styles.themePillActive : ''}`}
+                onClick={() => { setCardTheme('obsidian'); sessionStorage.setItem('hh_card_theme', 'obsidian'); }}
+              >
+                <span className={styles.themeDot} style={{ background: 'linear-gradient(135deg, #ffd700, #333333)' }} />
+                <span>Obsidian Gold</span>
+              </button>
+            </div>
+          </div>
+
           <div className={styles.cardScaler} ref={cardRef}>
             {activeFormat === 'pfp' ? (
-              /* ── FORMAT A: PFP FRAME OVERLAY ── */
-              <div className={styles.pfpFrameOuter}>
-                <div className={styles.pfpFrameInner}>
-                  {photoSrc ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={photoSrc} alt={formData.name || 'PFP Avatar'} className={styles.pfpUserPhoto} />
-                  ) : (
-                    <div className={styles.photoPlaceholder}>
-                      <span className={styles.placeholderIcon}>👤</span>
-                      <span className={styles.placeholderText}>NO PHOTO</span>
+              /* ── FORMAT A: 3 RICH PFP FRAME VARIANTS ── */
+              pfpStyle === 'polaroid' ? (
+                /* Variant 2: Tropical Polaroid Frame */
+                <div className={`${styles.pfpPolaroidOuter} ${cardTheme === 'sunset' ? styles.themeCyberSunset : cardTheme === 'ocean' ? styles.themeArabianWave : cardTheme === 'obsidian' ? styles.themeObsidianGold : styles.themeEmerald}`}>
+                  <div className={styles.pfpPolaroidTape}>
+                    <span>★ HACKER 🌴 BUILDER ★</span>
+                  </div>
+                  <div className={styles.pfpPolaroidInner}>
+                    {photoSrc ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photoSrc} alt={formData.name || 'Polaroid Avatar'} className={styles.pfpUserPhoto} />
+                    ) : (
+                      <div className={styles.photoPlaceholder}>
+                        <span className={styles.placeholderIcon}>👤</span>
+                        <span className={styles.placeholderText}>NO PHOTO</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.pfpPolaroidFooter}>
+                    <div className={styles.pfpPolaroidInfo}>
+                      <div className={styles.pfpPolaroidName}>
+                        {formData.name ? formData.name.toUpperCase() : 'HACKER BUILDER'}
+                      </div>
+                      <div className={styles.pfpPolaroidRole}>
+                        {formData.builderTitle || formData.role || 'BUILDER @ GOA'}
+                      </div>
                     </div>
-                  )}
+                    <div className={styles.pfpPolaroidStamp}>#FRAMEINGOA</div>
+                  </div>
+                </div>
+              ) : pfpStyle === 'cyber' ? (
+                /* Variant 3: Cyber Shield Frame */
+                <div className={`${styles.pfpCyberOuter} ${cardTheme === 'sunset' ? styles.themeCyberSunset : cardTheme === 'ocean' ? styles.themeArabianWave : cardTheme === 'obsidian' ? styles.themeObsidianGold : styles.themeEmerald}`}>
+                  <div className={styles.pfpCyberCornerTL} />
+                  <div className={styles.pfpCyberCornerTR} />
+                  <div className={styles.pfpCyberCornerBL} />
+                  <div className={styles.pfpCyberCornerBR} />
+                  <div className={styles.pfpCyberHeader}>
+                    HH_GOA_2026 // MORJIM
+                  </div>
+                  <div className={styles.pfpCyberInner}>
+                    {photoSrc ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photoSrc} alt={formData.name || 'Cyber Avatar'} className={styles.pfpUserPhoto} />
+                    ) : (
+                      <div className={styles.photoPlaceholder}>
+                        <span className={styles.placeholderIcon}>👤</span>
+                        <span className={styles.placeholderText}>NO PHOTO</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.pfpCyberFooter}>
+                    <span className={styles.pfpCyberDot} />
+                    <span>{formData.name ? formData.name.toUpperCase() : 'ACTIVE BUILDER'} // {formData.builderTitle || 'SHIPPING'}</span>
+                  </div>
+                </div>
+              ) : (
+                /* Variant 1: Circular Avatar Seal */
+                <div className={`${styles.pfpFrameOuter} ${cardTheme === 'sunset' ? styles.themeCyberSunset : cardTheme === 'ocean' ? styles.themeArabianWave : cardTheme === 'obsidian' ? styles.themeObsidianGold : styles.themeEmerald}`}>
+                  <div className={styles.pfpFrameInner}>
+                    {photoSrc ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photoSrc} alt={formData.name || 'PFP Avatar'} className={styles.pfpUserPhoto} />
+                    ) : (
+                      <div className={styles.photoPlaceholder}>
+                        <span className={styles.placeholderIcon}>👤</span>
+                        <span className={styles.placeholderText}>NO PHOTO</span>
+                      </div>
+                    )}
 
-                  {/* Tropical Border Graphic Overlay */}
-                  <div className={styles.pfpOverlayGraphic}>
-                    <div className={styles.pfpTopBadge}>
-                      ★ HH GOA 2026 ★
-                    </div>
-                    <div className={styles.pfpBottomBadge}>
-                      <span>#FRAMEINGOA</span>
-                      <span>🌴</span>
+                    {/* Tropical Border Graphic Overlay */}
+                    <div className={styles.pfpOverlayGraphic}>
+                      <div className={styles.pfpTopBadge}>
+                        ★ HH GOA 2026 ★
+                      </div>
+                      <div className={styles.pfpBottomBadgeWrap}>
+                        <div className={styles.pfpBottomBadge}>
+                          <span>#FRAMEINGOA</span>
+                          <span>🌴</span>
+                        </div>
+                        {formData.name && (
+                          <span className={styles.pfpNameTag}>{formData.name.toUpperCase()}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )
             ) : (
-              /* ── FORMAT B: BUILDER BADGE CARD ── */
+              /* ── FORMAT B: BUILDER BADGE CARD (MAIN) ── */
               <>
                 {/* Lanyard Graphic */}
                 <div className={styles.lanyardContainer}>
@@ -390,7 +548,7 @@ export default function CardExportPage() {
                 </div>
 
                 {/* The Badge Card Frame */}
-                <div className={styles.cardFrame}>
+                <div className={`${styles.cardFrame} ${cardTheme === 'sunset' ? styles.themeCyberSunset : cardTheme === 'ocean' ? styles.themeArabianWave : cardTheme === 'obsidian' ? styles.themeObsidianGold : styles.themeEmerald}`}>
                   <div className={styles.cardInner}>
                     {/* ── CARD HEADER ROW ── */}
                     <div className={styles.cardHeaderRow}>
