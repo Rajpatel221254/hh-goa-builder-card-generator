@@ -67,6 +67,8 @@ export default function HomePage() {
     xHandle: '@hacker',
     stack: 'REACT, NEXT.JS, SOL',
     location: 'GOA, INDIA',
+    website: 'builder.dev',
+    linkedin: '',
     github: 'hacker',
     email: 'hacker@hhgoa.com',
     fuel: 'COFFEE & CODE',
@@ -405,7 +407,16 @@ export default function HomePage() {
               />
             </div>
           </div>
-          <span className={styles.headerSubBadge}>STUDIO</span>
+          <div className={styles.headerStudioWrap}>
+            <Image
+              src="/2-47.svg"
+              alt="2:47 PM Studio"
+              width={16}
+              height={10}
+              className={styles.headerStudioImg}
+            />
+            <span className={styles.headerSubBadge}>STUDIO</span>
+          </div>
         </div>
 
         <nav className={styles.headerNavLinks}>
@@ -479,7 +490,21 @@ export default function HomePage() {
               <span className={styles.stripDot}>·</span>
               <span>28–31 OCT 2026</span>
               <span className={styles.stripDot}>·</span>
-              <span>2:47 PM STUDIO</span>
+              <a 
+                href="https://247pm.studio" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={styles.studioPartnerBadge}
+              >
+                <Image
+                  src="/2-47.svg"
+                  alt="2:47 PM Studio"
+                  width={16}
+                  height={10}
+                  className={styles.eventStripStudioImg}
+                />
+                <span>2:47 PM STUDIO</span>
+              </a>
             </div>
 
             <div className={styles.logoBlock}>
@@ -532,21 +557,36 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Central Card Preview */}
+            {/* Central Card Preview - Exact Final Format B Badge */}
             <div className={styles.cardPreviewContainer}>
-              <div className={styles.previewLanyard} />
-              <div className={styles.previewCard}>
-                <div className={styles.previewCardInner}>
-                  
-                  {/* Card Header */}
+              {/* Lanyard Graphic */}
+              <div className={styles.lanyardContainer}>
+                <div className={styles.lanyardStrap}>
+                  <div className={styles.lanyardPattern}>
+                    <span>★ HH GOA 2026 🌴</span>
+                  </div>
+                </div>
+                <div className={styles.lanyardMetalClip}>
+                  <div className={styles.clipRing} />
+                  <div className={styles.clipBody}>
+                    <div className={styles.clipSlot} />
+                  </div>
+                </div>
+              </div>
+
+              {/* The Badge Card Frame */}
+              <div className={styles.cardFrame}>
+                <div className={styles.cardInner}>
+                  {/* ── CARD HEADER ROW ── */}
                   <div className={styles.cardHeaderRow}>
-                    <div className={styles.cardLogoBlock}>
+                    {/* Left: Official Hacker House Wordmark + Goa in center */}
+                    <div className={styles.logoBlock}>
                       <div className={styles.cardWordmarkContainer}>
                         <Image
                           src="/Hacker_house_transparent.png"
                           alt="Hacker House"
-                          width={150}
-                          height={24}
+                          width={200}
+                          height={36}
                           className={styles.cardWordmarkImg}
                           priority
                         />
@@ -554,70 +594,121 @@ export default function HomePage() {
                           <Image
                             src="/logo.svg"
                             alt="गोवा"
-                            width={24}
-                            height={24}
+                            width={32}
+                            height={32}
                             className={styles.cardGoaImg}
                             priority
                           />
                         </div>
                       </div>
-                      <div className={styles.cardDates}>
+                      <div className={styles.logoDates}>
                         <span>GOA, INDIA</span>
-                        <span className={styles.cardDot}>•</span>
-                        <span>28–31 OCT 2026</span>
+                        <span className={styles.dateDot}>•</span>
+                        <span>28 – 31 OCT 2026</span>
+                      </div>
+                      <div className={styles.logoStudio}>
+                        <Image
+                          src="/2-47.svg"
+                          alt="2:47 PM Studio"
+                          width={14}
+                          height={9}
+                          className={styles.logoStudioImg}
+                        />
+                        <span>2:47 PM STUDIO</span>
                       </div>
                     </div>
 
-                    <div className={styles.cardStampBlock}>
-                      <div className={styles.miniPostmark}>
-                        <svg viewBox="0 0 100 100" className={styles.miniStampSvg}>
+                    {/* Right: Postmark Stamp + Beach Sunset Scene */}
+                    <div className={styles.artworkBlock}>
+                      {/* Circular Gold Postmark Stamp */}
+                      <div className={styles.postmarkStamp}>
+                        <svg viewBox="0 0 100 100" className={styles.stampSvg}>
                           <circle cx="50" cy="50" r="46" fill="none" stroke="#f5c800" strokeWidth="2.5" strokeDasharray="3.5 2.5" />
-                          <path id="miniStampArc" d="M 18,50 A 32,32 0 1,1 82,50" fill="none" />
-                          <text className={styles.miniStampText}>
-                            <textPath href="#miniStampArc" startOffset="50%" textAnchor="middle" fill="#f5c800">
+                          <circle cx="50" cy="50" r="38" fill="none" stroke="#f5c800" strokeWidth="1.5" />
+                          <path id="heroStampArcTop" d="M 16,50 A 34,34 0 1,1 84,50" fill="none" />
+                          <text className={styles.stampSvgText}>
+                            <textPath href="#heroStampArcTop" startOffset="50%" textAnchor="middle" fill="#f5c800">
                               BUILT IN GOA ★
                             </textPath>
                           </text>
-                          <path d="M50 35 L50 65 M38 45 Q50 38 62 45" stroke="#f5c800" strokeWidth="2" fill="none" />
+                          <path id="heroStampArcBottom" d="M 84,50 A 34,34 0 0,1 16,50" fill="none" />
+                          <text className={styles.stampSvgTextSmall}>
+                            <textPath href="#heroStampArcBottom" startOffset="50%" textAnchor="middle" fill="#f5c800">
+                              BUILDING THE FUTURE
+                            </textPath>
+                          </text>
+                          {/* Center Palm Icon */}
+                          <path d="M50 32 L50 68" stroke="#f5c800" strokeWidth="3" strokeLinecap="round" />
+                          <path d="M50 38 Q34 30 28 42" stroke="#f5c800" strokeWidth="2.5" fill="none" />
+                          <path d="M50 42 Q66 34 72 46" stroke="#f5c800" strokeWidth="2.5" fill="none" />
+                          <path d="M50 48 Q32 46 26 58" stroke="#f5c800" strokeWidth="2" fill="none" />
+                          <path d="M50 52 Q68 50 74 62" stroke="#f5c800" strokeWidth="2" fill="none" />
+                        </svg>
+                      </div>
+
+                      {/* Tropical Beach & Shack Artwork with generous spacing */}
+                      <div className={styles.beachArtBox}>
+                        <svg viewBox="0 0 220 110" fill="none" className={styles.beachArtSvg}>
+                          {/* Glowing Sun */}
+                          <circle cx="80" cy="48" r="26" fill="#f5c800" />
+                          {/* Sun Reflections on water */}
+                          <path d="M55 76 L105 76 M62 80 L98 80 M70 84 L90 84" stroke="#f5c800" strokeWidth="1.5" opacity="0.6" />
+                          {/* Ocean Water Waves */}
+                          <path d="M0 70 Q55 64 110 70 T220 70 L220 110 L0 110 Z" fill="#0b4520" />
+                          <path d="M0 76 Q55 72 110 76 T220 76" stroke="#1d8040" strokeWidth="1.2" />
+
+                          {/* Sailboat */}
+                          <path d="M30 63 L40 44 L40 63 Z" fill="#fdf5e0" />
+                          <path d="M26 65 L44 65 L40 69 L30 69 Z" fill="#fdf5e0" />
+                          {/* Small flying seagulls */}
+                          <path d="M18 32 Q23 27 28 32 Q33 27 38 32" stroke="#fdf5e0" strokeWidth="1.2" fill="none" opacity="0.75" />
+                          <path d="M48 22 Q53 17 58 22 Q63 17 68 22" stroke="#fdf5e0" strokeWidth="1.2" fill="none" opacity="0.75" />
+
+                          {/* Surfboards */}
+                          <ellipse cx="108" cy="72" rx="4" ry="17" fill="#fdf5e0" stroke="#0e3d1f" strokeWidth="1.5" transform="rotate(-15 108 72)" />
+                          <ellipse cx="118" cy="72" rx="4" ry="17" fill="#f5c800" stroke="#ff2d78" strokeWidth="1.5" transform="rotate(10 118 72)" />
+
+                          {/* Goa Beach Shack Cafe */}
+                          <rect x="130" y="52" width="56" height="38" rx="3" fill="#fdf5e0" stroke="#0e3d1f" strokeWidth="2" />
+                          <polygon points="124,52 158,34 192,52" fill="#ff2d78" stroke="#0e3d1f" strokeWidth="1.5" />
+                          <text x="158" y="47" fill="#ffffff" fontSize="6.5" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif" letterSpacing="0.5">
+                            GOA BEACH
+                          </text>
+                          <rect x="138" y="62" width="16" height="16" fill="#155a28" />
+                          <rect x="162" y="62" width="16" height="28" fill="#0e3d1f" />
+                          {/* Cafe Bar Stools */}
+                          <line x1="142" y1="78" x2="142" y2="88" stroke="#0e3d1f" strokeWidth="1.5" />
+                          <line x1="148" y1="78" x2="148" y2="88" stroke="#0e3d1f" strokeWidth="1.5" />
+
+                          {/* Palm Tree on Right with clean spacing */}
+                          <path d="M208 110 Q202 65 190 25" stroke="#165a2d" strokeWidth="7" strokeLinecap="round" />
+                          <path d="M190 25 Q162 10 144 24" stroke="#229946" strokeWidth="3.5" fill="none" />
+                          <path d="M190 25 Q172 0 182 -15" stroke="#229946" strokeWidth="3.5" fill="none" />
+                          <path d="M190 25 Q212 5 224 20" stroke="#229946" strokeWidth="3.5" fill="none" />
+                          <path d="M190 25 Q208 40 218 55" stroke="#229946" strokeWidth="3.5" fill="none" />
                         </svg>
                       </div>
                     </div>
                   </div>
 
-                  {/* Card Middle: Photo & Details */}
+                  {/* ── CARD MIDDLE GRID: PHOTO + DETAILS ── */}
                   <div className={styles.cardMainGrid}>
+                    {/* Left Column: Photo & Builder Title */}
                     <div className={styles.photoCol}>
                       <div className={styles.photoFrameOuter}>
-                        {/* Duct tape effect for creative DIY vibe */}
-                        <div className={styles.tapeAccent} />
-                        
                         <div className={styles.photoFrameInner}>
                           {photoSrc ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={photoSrc} alt="Preview" className={styles.userPhoto} />
+                            <img src={photoSrc} alt={formData.name || 'Builder Photo'} className={styles.userPhoto} />
                           ) : (
-                            /* Highly creative, neon-themed hologram placeholder */
-                            <div className={styles.hologramPlaceholder}>
-                              <div className={styles.scanline} />
-                              <div className={styles.gridOverlay} />
-                              
-                              <svg viewBox="0 0 100 100" className={styles.hackerAvatarSvg}>
-                                <circle cx="50" cy="50" r="38" fill="rgba(255, 45, 120, 0.12)" stroke="rgba(255, 45, 120, 0.25)" strokeWidth="1" />
-                                <line x1="12" y1="50" x2="88" y2="50" stroke="rgba(255, 45, 120, 0.15)" strokeWidth="1" />
-                                <line x1="20" y1="35" x2="80" y2="35" stroke="rgba(255, 45, 120, 0.15)" strokeWidth="1" />
-                                <line x1="20" y1="65" x2="80" y2="65" stroke="rgba(255, 45, 120, 0.15)" strokeWidth="1" />
-                                
-                                <path d="M 50,22 C 40,22 36,30 36,38 C 36,46 39,48 42,50 C 32,56 26,64 26,78 L 74,78 C 74,64 68,56 58,50 C 61,48 64,46 64,38 C 64,30 60,22 50,22 Z" fill="var(--yellow)" opacity="0.8" />
-                                <rect x="38" y="34" width="11" height="6" rx="1" fill="#0c4520" stroke="var(--pink)" strokeWidth="1.2" />
-                                <rect x="51" y="34" width="11" height="6" rx="1" fill="#0c4520" stroke="var(--pink)" strokeWidth="1.2" />
-                                <line x1="49" y1="37" x2="51" y2="37" stroke="var(--pink)" strokeWidth="1.2" />
-                              </svg>
-                              <span className={styles.hologramText}>ATTACH IMAGE</span>
-                              <span className={styles.hologramHint}>CLICK BELOW</span>
+                            <div className={styles.photoPlaceholder}>
+                              <span className={styles.placeholderIcon}>👤</span>
+                              <span className={styles.placeholderText}>BUILDER</span>
                             </div>
                           )}
                         </div>
-                        
+
+                        {/* Hacker Builder Circular Seal */}
                         <div className={styles.hackerSeal}>
                           <span className={styles.sealTop}>HACKER</span>
                           <span className={styles.sealPalm}>🌴</span>
@@ -625,69 +716,152 @@ export default function HomePage() {
                         </div>
                       </div>
 
+                      {/* Builder Title Box */}
                       <div className={styles.builderTitleBox}>
                         <span className={styles.builderTitleBadge}>BUILDER TITLE</span>
                         <div className={styles.builderTitleText}>
-                          <span>{formData.builderTitle || 'THE CODE ARCHITECT'}</span>
+                          <span>{formData.builderTitle ? formData.builderTitle.toUpperCase() : 'THE CODE ARCHITECT'}</span>
+                          <span className={styles.titlePalm}>🌴</span>
                         </div>
                       </div>
                     </div>
 
+                    {/* Right Column: Name & Details List */}
                     <div className={styles.infoCol}>
+                      {/* Name Header */}
                       <div className={styles.nameRow}>
                         <span className={styles.nameSparkle}>✦</span>
-                        <h2 className={styles.cardName}>{formData.name || 'HACKER BUILDER'}</h2>
+                        <h2 className={styles.cardName}>
+                          {formData.name ? formData.name.toUpperCase() : 'BUILDER NAME'}
+                        </h2>
+                        <span className={styles.nameSparkle}>✦</span>
                       </div>
-                      <div className={styles.cardRole}>{formData.role || 'FULLSTACK DEVELOPER'}</div>
 
+                      {/* Role / Subtitle */}
+                      {formData.role && (
+                        <div className={styles.cardRole}>
+                          {formData.role.toUpperCase()}
+                        </div>
+                      )}
+
+                      {/* Detail Rows */}
                       <div className={styles.detailsList}>
+                        {/* X / Twitter */}
                         <div className={styles.detailItem}>
                           <div className={styles.detailIcon}>𝕏</div>
-                          <span className={styles.detailKey}>X</span>
-                          <span className={styles.detailVal}>{formData.xHandle || '@username'}</span>
+                          <span className={styles.detailKey}>X HANDLE</span>
+                          <span className={styles.detailVal}>{formData.xHandle || '@builder'}</span>
                         </div>
+
+                        {/* Stack / Role */}
                         <div className={styles.detailItem}>
                           <div className={styles.detailIcon}>&lt;/&gt;</div>
-                          <span className={styles.detailKey}>STACK</span>
-                          <span className={styles.detailVal}>{formData.stack || 'REACT, NEXT.JS, SOL'}</span>
+                          <span className={styles.detailKey}>STACK / ROLE</span>
+                          <span className={styles.detailVal}>{formData.stack || 'FULLSTACK'}</span>
                         </div>
+
+                        {/* Location */}
                         <div className={styles.detailItem}>
                           <div className={styles.detailIcon}>📍</div>
-                          <span className={styles.detailKey}>LOC</span>
+                          <span className={styles.detailKey}>LOCATION</span>
                           <span className={styles.detailVal}>{formData.location || 'GOA, INDIA'}</span>
+                        </div>
+
+                        {/* Website */}
+                        <div className={styles.detailItem}>
+                          <div className={styles.detailIcon}>🌐</div>
+                          <span className={styles.detailKey}>WEBSITE</span>
+                          <span className={styles.detailVal}>{formData.website || 'builder.dev'}</span>
+                        </div>
+
+                        {/* GitHub / Social */}
+                        <div className={styles.detailItem}>
+                          <div className={styles.detailIcon}>🐙</div>
+                          <span className={styles.detailKey}>GITHUB</span>
+                          <span className={styles.detailVal}>{formData.github ? (formData.github.startsWith('github.com') ? formData.github : `github.com/${formData.github.replace(/^@/, '')}`) : 'github.com/builder'}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Card Stats Footer Row */}
-                  <div className={styles.cardStatsRow}>
-                    <div className={styles.cardStatBox}>
-                      <span className={styles.cardStatKey}>FUEL</span>
-                      <span className={styles.cardStatVal}>{formData.fuel}</span>
+                  {/* ── CARD STATS ROW: FUEL, MODE, VIBE ── */}
+                  <div className={styles.statsRow}>
+                    <div className={styles.statBox}>
+                      <div className={styles.statIcon}>☕</div>
+                      <div className={styles.statMeta}>
+                        <span className={styles.statKey}>FUEL</span>
+                        <span className={styles.statVal}>{formData.fuel || 'COFFEE & CODE'}</span>
+                      </div>
                     </div>
-                    <div className={styles.cardStatBox}>
-                      <span className={styles.cardStatKey}>MODE</span>
-                      <span className={styles.cardStatVal}>{formData.mode}</span>
+
+                    <div className={styles.statSeparator} />
+
+                    <div className={styles.statBox}>
+                      <div className={styles.statIcon}>💻</div>
+                      <div className={styles.statMeta}>
+                        <span className={styles.statKey}>MODE</span>
+                        <span className={styles.statVal}>{formData.mode || 'SHIP • BUILD REPEAT'}</span>
+                      </div>
                     </div>
-                    <div className={styles.cardStatBox}>
-                      <span className={styles.cardStatKey}>VIBE</span>
-                      <span className={styles.cardStatVal}>{formData.vibe}</span>
+
+                    <div className={styles.statSeparator} />
+
+                    <div className={styles.statBox}>
+                      <div className={styles.statIcon}>🚀</div>
+                      <div className={styles.statMeta}>
+                        <span className={styles.statKey}>VIBE</span>
+                        <span className={styles.statVal}>{formData.vibe || 'BUILDING IDEAS. BREAKING LIMITS.'}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Card Footer: Barcode & Tag */}
+                  {/* ── CARD FOOTER: BARCODE + #FRAMEINGOA + VILLA ── */}
                   <div className={styles.cardFooterRow}>
+                    {/* Barcode */}
                     <div className={styles.barcodeBox}>
                       <div className={styles.barcodeBars}>
-                        {[2, 1, 3, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 1, 4, 2].map((w, i) => (
-                          <div key={i} className={styles.barLine} style={{ width: `${w * 1.2}px` }} />
-                        ))}
+                        {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 1, 4, 2, 3, 1, 2, 4, 1, 3, 2, 4].map(
+                          (w, i) => (
+                            <div key={i} className={styles.barLine} style={{ width: `${w * 1.5}px` }} />
+                          )
+                        )}
                       </div>
                     </div>
+
+                    {/* #FRAMEINGOA Tag */}
                     <div className={styles.frameTag}>
                       <span className={styles.frameTagText}>#FRAMEINGOA</span>
                       <span className={styles.frameTagPalm}>🌴</span>
+                    </div>
+
+                    {/* Goa Villa with Hibiscus Artwork */}
+                    <div className={styles.villaBox}>
+                      <svg viewBox="0 0 130 90" fill="none" className={styles.villaSvg}>
+                        {/* Terracotta Villa Roof */}
+                        <polygon points="15,40 65,14 115,40" fill="#cf4c28" stroke="#0e3d1f" strokeWidth="2" />
+                        <path d="M25,36 L65,20 L105,36" stroke="#f5c800" strokeWidth="1.5" fill="none" />
+                        {/* Villa Wall */}
+                        <rect x="22" y="40" width="86" height="42" fill="#fdf5e0" stroke="#0e3d1f" strokeWidth="2" />
+                        {/* Windows with Pink Shutters */}
+                        <rect x="30" y="46" width="15" height="18" fill="#155a28" />
+                        <rect x="28" y="46" width="4" height="18" fill="#ff2d78" />
+                        <rect x="43" y="46" width="4" height="18" fill="#ff2d78" />
+                        <rect x="85" y="46" width="15" height="18" fill="#155a28" />
+                        <rect x="83" y="46" width="4" height="18" fill="#ff2d78" />
+                        <rect x="98" y="46" width="4" height="18" fill="#ff2d78" />
+                        {/* Door */}
+                        <rect x="58" y="46" width="14" height="36" fill="#f5c800" stroke="#0e3d1f" strokeWidth="1.5" />
+                        <line x1="65" y1="46" x2="65" y2="82" stroke="#0e3d1f" strokeWidth="1" />
+                        {/* Flowers and Tropical Leaves */}
+                        <ellipse cx="12" cy="74" rx="12" ry="6" fill="#166b30" transform="rotate(-30 12 74)" />
+                        <ellipse cx="118" cy="76" rx="12" ry="6" fill="#166b30" transform="rotate(30 118 76)" />
+                        <circle cx="14" cy="68" r="8" fill="#ff2d78" />
+                        <circle cx="14" cy="68" r="3" fill="#f5c800" />
+                        <circle cx="116" cy="70" r="8" fill="#ff2d78" />
+                        <circle cx="116" cy="70" r="3" fill="#f5c800" />
+                        <circle cx="26" cy="80" r="5" fill="#f5c800" />
+                        <circle cx="104" cy="82" r="5" fill="#ff2d78" />
+                      </svg>
                     </div>
                   </div>
 
@@ -971,6 +1145,22 @@ export default function HomePage() {
             <p className={styles.footerBrandDesc}>
               A high-octane tropical sandbox where top builders unite, collaborate, and push the boundaries of coding under the Goan sun.
             </p>
+
+            {/* 2:47 PM Studio Badge Block */}
+            <a href="https://247pm.studio" target="_blank" rel="noopener noreferrer" className={styles.footerStudioBadge}>
+              <span className={styles.footerStudioLabel}>POWERED & CRAFTED BY</span>
+              <div className={styles.footerStudioBrand}>
+                <Image
+                  src="/2-47.svg"
+                  alt="2:47 PM Studio Logo"
+                  width={28}
+                  height={18}
+                  className={styles.footerStudioImg}
+                />
+                <span className={styles.footerStudioName}>2:47 PM STUDIO</span>
+              </div>
+            </a>
+
             <div className={styles.footerSocials}>
               <a href="https://x.com" target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="X">𝕏</a>
               <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="GitHub">🐙</a>
@@ -1010,7 +1200,17 @@ export default function HomePage() {
           <div className={styles.footerBottomContainer}>
             <span>© 2026 HACKER HOUSE GOA. ALL RIGHTS RESERVED.</span>
             <span className={styles.footerBottomCredit}>
-              CRAFTED WITH 🌴 IN GOA BY <a href="https://247pm.studio" target="_blank" rel="noopener noreferrer">2:47 PM STUDIO</a>
+              CRAFTED WITH 🌴 IN GOA BY{' '}
+              <a href="https://247pm.studio" target="_blank" rel="noopener noreferrer" className={styles.footerBottomStudioLink}>
+                <Image
+                  src="/2-47.svg"
+                  alt="2:47 PM Studio"
+                  width={18}
+                  height={11}
+                  className={styles.footerCreditStudioImg}
+                />
+                <span>2:47 PM STUDIO</span>
+              </a>
             </span>
           </div>
         </div>

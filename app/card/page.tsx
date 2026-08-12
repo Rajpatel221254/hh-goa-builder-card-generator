@@ -100,9 +100,9 @@ export default function CardExportPage() {
     }
   }, []);
 
-  // Download Card as High-Quality PNG
-  const handleDownload = async () => {
-    if (!cardRef.current || isDownloading) return;
+  // Internal helper to render & trigger PNG download, copy to clipboard, and return file
+  const generateAndDownloadCard = async (customMessage?: string): Promise<{ dataUrl: string; blob: Blob; file: File } | null> => {
+    if (!cardRef.current) return null;
 
     try {
       setIsDownloading(true);
@@ -114,10 +114,15 @@ export default function CardExportPage() {
         quality: 1,
       });
 
-      // Trigger file download
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
       const safeName = formData.name ? formData.name.trim().replace(/\s+/g, '_') : 'Builder';
+      const fileName = `HH_Goa_2026_${activeFormat === 'pfp' ? 'PFP_Frame' : 'Builder_Card'}_${safeName}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      // Trigger automatic file download
       const link = document.createElement('a');
-      link.download = `HH_Goa_2026_${activeFormat === 'pfp' ? 'PFP_Frame' : 'Builder_Card'}_${safeName}.png`;
+      link.download = fileName;
       link.href = dataUrl;
       link.click();
 
@@ -129,41 +134,103 @@ export default function CardExportPage() {
         colors: ['#f5c800', '#ff2d78', '#229946', '#ffffff'],
       });
 
-      setToastMessage(`${activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card'} Downloaded Successfully!`);
+      // Try copying image to clipboard for instant pasting
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof window !== 'undefined' && 'ClipboardItem' in window) {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        } catch (err) {
+          console.log('Clipboard image copy fallback:', err);
+        }
+      }
+
+      setToastMessage(customMessage || `${activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card'} Downloaded Successfully!`);
       setDownloadSuccess(true);
       setTimeout(() => setDownloadSuccess(false), 5000);
+
+      return { dataUrl, blob, file };
     } catch (err) {
       console.error('Error generating image:', err);
       alert('Could not export image. Please try again.');
+      return null;
     } finally {
       setIsDownloading(false);
     }
   };
 
-  // Share to X intent with Clipboard Image Copying & Direct X Web Intent
+  // Direct Download Button
+  const handleDownload = async () => {
+    if (isDownloading) return;
+    await generateAndDownloadCard(`${activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card'} Downloaded Successfully!`);
+  };
+
+  // Share to X intent (Downloads HD PNG + Copies to clipboard + Opens X intent)
   const handleShareToX = async () => {
     const builderTitle = formData.builderTitle || 'The Code Architect';
     const formatName = activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card';
     const text = `Just generated my official HH Goa 2026 ${formatName} as "${builderTitle}"! 🌴🚀\n\nSee you in Goa! 🏖️\n\n#FrameInGoa #HHGoa2026 @HackerHouseGoa`;
 
-    // 1. Try copying image to clipboard for direct copy-paste into X
-    if (cardRef.current && typeof navigator !== 'undefined' && navigator.clipboard && typeof window !== 'undefined' && 'ClipboardItem' in window) {
+    await generateAndDownloadCard(`Card Downloaded! Opening X (Twitter) — paste image to post.`);
+
+    // Open X tweet intent with pre-filled caption & hashtag
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  // Share to LinkedIn intent (Downloads HD PNG + Copies to clipboard + Opens LinkedIn intent)
+  const handleShareToLinkedIn = async () => {
+    const builderTitle = formData.builderTitle || 'The Code Architect';
+    const formatName = activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card';
+    const text = `Excited to share my official Hacker House Goa 2026 ${formatName}! 🌴🚀\n\nRole: ${builderTitle}\nBuilt in Goa with #FrameInGoa\n\nSee everyone in Goa!`;
+
+    await generateAndDownloadCard(`Card Downloaded! Opening LinkedIn — attach image to post.`);
+
+    // Try copy caption to clipboard
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
       try {
-        const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        setToastMessage('Image copied to clipboard! Paste (Ctrl+V) directly into your X post.');
-        setDownloadSuccess(true);
-        setTimeout(() => setDownloadSuccess(false), 5000);
+        await navigator.clipboard.writeText(text);
       } catch (err) {
-        console.log('Clipboard image copy fallback:', err);
+        console.log('Clipboard text copy fallback:', err);
       }
     }
 
-    // 2. Open X tweet intent with pre-filled caption & hashtag
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    // Open LinkedIn post creator
+    const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  // Share to Instagram (Native Web Share on mobile with file OR Download + Copy caption)
+  const handleShareToInstagram = async () => {
+    const builderTitle = formData.builderTitle || 'The Code Architect';
+    const text = `HH Goa 2026 Builder Card: ${builderTitle} 🌴 #FrameInGoa #HHGoa2026 @HackerHouseGoa`;
+
+    const result = await generateAndDownloadCard(`Card saved to your device! Opening Instagram...`);
+    if (!result) return;
+
+    // Check if device supports Web Share API with files (iOS Safari, Android Chrome)
+    if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [result.file] })) {
+      try {
+        await navigator.share({
+          files: [result.file],
+          title: 'HH Goa 2026 Builder Card',
+          text: text,
+        });
+        return;
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.log('Web share error:', err);
+        }
+      }
+    }
+
+    // Fallback: Copy caption & open Instagram
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        console.log('Clipboard text fallback:', err);
+      }
+    }
+    window.open('https://www.instagram.com', '_blank', 'noopener,noreferrer');
   };
 
   // Create another card (reset session)
@@ -671,14 +738,40 @@ export default function CardExportPage() {
                 )}
               </button>
 
-              {/* Share to X Button */}
+              {/* Share to X Button (Auto-downloads + Opens X) */}
               <button
                 type="button"
                 onClick={handleShareToX}
+                disabled={isDownloading}
                 className={styles.shareXBtn}
+                title="Automatically downloads image and opens X"
               >
                 <span className={styles.xIcon}>𝕏</span>
                 <span>SHARE TO X (#FrameInGoa)</span>
+              </button>
+
+              {/* Share to LinkedIn Button (Auto-downloads + Opens LinkedIn) */}
+              <button
+                type="button"
+                onClick={handleShareToLinkedIn}
+                disabled={isDownloading}
+                className={styles.shareLinkedInBtn}
+                title="Automatically downloads image and opens LinkedIn"
+              >
+                <span className={styles.linkedInIcon}>in</span>
+                <span>SHARE TO LINKEDIN</span>
+              </button>
+
+              {/* Share to Instagram Button (Auto-downloads / Native Share) */}
+              <button
+                type="button"
+                onClick={handleShareToInstagram}
+                disabled={isDownloading}
+                className={styles.shareInstaBtn}
+                title="Save image and share to Instagram Story / Feed"
+              >
+                <span className={styles.instaIcon}>📸</span>
+                <span>SHARE TO INSTAGRAM</span>
               </button>
             </div>
 
@@ -707,7 +800,7 @@ export default function CardExportPage() {
               <span>•</span>
               <span>28–31 OCT 2026</span>
               <span>•</span>
-              <span>2:47 PM STUDIO</span>
+                <span>2:47 PM STUDIO</span>
             </div>
           </div>
         </section>
