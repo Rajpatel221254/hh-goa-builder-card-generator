@@ -168,12 +168,24 @@ export default function CardExportPage() {
     const builderTitle = formData.builderTitle || 'The Code Architect';
     const formatName = activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card';
     const text = `Just generated my official HH Goa 2026 ${formatName} as "${builderTitle}"! 🌴🚀\n\nSee you in Goa! 🏖️\n\n#FrameInGoa #HHGoa2026 @HackerHouseGoa`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+
+    // Pre-open window synchronously to prevent popup blocker
+    const shareWindow = typeof window !== 'undefined' ? window.open(url, '_blank') : null;
 
     await generateAndDownloadCard(`Card Downloaded! Opening X (Twitter) — paste image to post.`);
 
-    // Open X tweet intent with pre-filled caption & hashtag
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (shareWindow && shareWindow.focus) {
+      shareWindow.focus();
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener,noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   // Share to LinkedIn intent (Downloads HD PNG + Copies to clipboard + Opens LinkedIn intent)
@@ -181,6 +193,10 @@ export default function CardExportPage() {
     const builderTitle = formData.builderTitle || 'The Code Architect';
     const formatName = activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card';
     const text = `Excited to share my official Hacker House Goa 2026 ${formatName}! 🌴🚀\n\nRole: ${builderTitle}\nBuilt in Goa with #FrameInGoa\n\nSee everyone in Goa!`;
+    const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`;
+
+    // Pre-open window synchronously to prevent popup blocker
+    const shareWindow = typeof window !== 'undefined' ? window.open(url, '_blank') : null;
 
     await generateAndDownloadCard(`Card Downloaded! Opening LinkedIn — attach image to post.`);
 
@@ -193,36 +209,32 @@ export default function CardExportPage() {
       }
     }
 
-    // Open LinkedIn post creator
-    const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (shareWindow && shareWindow.focus) {
+      shareWindow.focus();
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener,noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
-  // Share to Instagram (Native Web Share on mobile with file OR Download + Copy caption)
-  const handleShareToInstagram = async () => {
+  // Share to WhatsApp (Downloads HD PNG + Copies to clipboard + Opens WhatsApp chat/share)
+  const handleShareToWhatsApp = async () => {
     const builderTitle = formData.builderTitle || 'The Code Architect';
-    const text = `HH Goa 2026 Builder Card: ${builderTitle} 🌴 #FrameInGoa #HHGoa2026 @HackerHouseGoa`;
+    const formatName = activeFormat === 'pfp' ? 'PFP Frame' : 'Builder Card';
+    const text = `🌴 Just minted my official Hacker House Goa 2026 ${formatName} as "${builderTitle}"! 🚀🏖️\n\nCheck it out & create yours at https://hhgoa.com\n\n#FrameInGoa #HHGoa2026`;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 
-    const result = await generateAndDownloadCard(`Card saved to your device! Opening Instagram...`);
-    if (!result) return;
+    // Pre-open window synchronously so popup blocker does not block it
+    const shareWindow = typeof window !== 'undefined' ? window.open(url, '_blank') : null;
 
-    // Check if device supports Web Share API with files (iOS Safari, Android Chrome)
-    if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [result.file] })) {
-      try {
-        await navigator.share({
-          files: [result.file],
-          title: 'HH Goa 2026 Builder Card',
-          text: text,
-        });
-        return;
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          console.log('Web share error:', err);
-        }
-      }
-    }
+    await generateAndDownloadCard(`Card Downloaded! Opening WhatsApp — paste image into your chat/status.`);
 
-    // Fallback: Copy caption & open Instagram
+    // Copy caption & tags to clipboard
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(text);
@@ -230,7 +242,18 @@ export default function CardExportPage() {
         console.log('Clipboard text fallback:', err);
       }
     }
-    window.open('https://www.instagram.com', '_blank', 'noopener,noreferrer');
+
+    if (shareWindow && shareWindow.focus) {
+      shareWindow.focus();
+    } else if (typeof window !== 'undefined') {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener,noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   // Create another card (reset session)
@@ -762,16 +785,16 @@ export default function CardExportPage() {
                 <span>SHARE TO LINKEDIN</span>
               </button>
 
-              {/* Share to Instagram Button (Auto-downloads / Native Share) */}
+              {/* Share to WhatsApp Button (Auto-downloads + Opens WhatsApp) */}
               <button
                 type="button"
-                onClick={handleShareToInstagram}
+                onClick={handleShareToWhatsApp}
                 disabled={isDownloading}
-                className={styles.shareInstaBtn}
-                title="Save image and share to Instagram Story / Feed"
+                className={styles.shareWhatsAppBtn}
+                title="Automatically downloads image and opens WhatsApp"
               >
-                <span className={styles.instaIcon}>📸</span>
-                <span>SHARE TO INSTAGRAM</span>
+                <span className={styles.whatsAppIcon}>💬</span>
+                <span>SHARE TO WHATSAPP</span>
               </button>
             </div>
 
